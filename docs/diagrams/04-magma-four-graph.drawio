@@ -1,0 +1,99 @@
+<mxfile host="app.diagrams.net" agent="Claude" version="24.0.0" type="device">
+  <diagram id="fourgraph" name="MAGMA Four-Graph Model">
+    <mxGraphModel dx="1422" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="fg_title" value="&lt;b&gt;MAGMA Four-Graph Model&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;Four edge types capture multi-dimensional relationships between insights&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;fontSize=16;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="300" y="10" width="500" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="fg_n1" value="&lt;b&gt;A&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:8px&quot;&gt;Chose SQLite&lt;br&gt;for storage&lt;/font&gt;" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="200" y="200" width="100" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="fg_n2" value="&lt;b&gt;B&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:8px&quot;&gt;Team lacks&lt;br&gt;Redis experience&lt;/font&gt;" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="480" y="120" width="100" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="fg_n3" value="&lt;b&gt;C&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:8px&quot;&gt;SQLite WAL&lt;br&gt;concurrency test&lt;/font&gt;" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="480" y="310" width="100" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="fg_n4" value="&lt;b&gt;D&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:8px&quot;&gt;DB selection&lt;br&gt;comparison&lt;/font&gt;" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="780" y="200" width="100" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="fg_n5" value="&lt;b&gt;E&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:8px&quot;&gt;Deployment&lt;br&gt;confirmed&lt;/font&gt;" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="200" y="400" width="100" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="fg_t_label" value="&lt;b&gt;① Temporal Graph&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;time-ordered backbone + 24h proximity&lt;br&gt;backbone + proximity&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E6F3FF;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="40" y="550" width="200" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="fg_t1" value="backbone" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#6c8ebf;strokeWidth=2;fontSize=9;fontColor=#6c8ebf;" edge="1" parent="1" source="fg_n1" target="fg_n2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="fg_t2" value="backbone" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#6c8ebf;strokeWidth=2;fontSize=9;fontColor=#6c8ebf;" edge="1" parent="1" source="fg_n2" target="fg_n3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="fg_t3" value="proximity w=0.5" style="rounded=1;strokeColor=#6c8ebf;strokeWidth=1;dashed=1;fontSize=8;fontColor=#6c8ebf;" edge="1" parent="1" source="fg_n1" target="fg_n5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="fg_e_label" value="&lt;b&gt;② Entity Graph&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;co-occurrence on shared entities&lt;br&gt;regex + dictionary + user labels&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="280" y="550" width="200" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="fg_e1" value="entity: SQLite" style="rounded=1;strokeColor=#82b366;strokeWidth=2;fontSize=9;fontColor=#82b366;" edge="1" parent="1" source="fg_n1" target="fg_n3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="fg_e2" value="entity: SQLite" style="rounded=1;strokeColor=#82b366;strokeWidth=2;fontSize=9;fontColor=#82b366;" edge="1" parent="1" source="fg_n1" target="fg_n4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="fg_c_label" value="&lt;b&gt;③ Causal Graph&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;causal reasoning chains&lt;br&gt;cause → effect&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE6E6;strokeColor=#b85450;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="520" y="550" width="200" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="fg_c1" value="causes" style="rounded=1;strokeColor=#b85450;strokeWidth=3;fontSize=9;fontColor=#b85450;fontStyle=1;" edge="1" parent="1" source="fg_n2" target="fg_n1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="400" y="160" />
+              <mxPoint x="400" y="240" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="fg_s_label" value="&lt;b&gt;④ Semantic Graph&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;semantic similarity links&lt;br&gt;cos ≥ 0.80 auto | 0.40-0.80 LLM review&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="760" y="550" width="240" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="fg_s1" value="semantic cos=0.87 (auto)" style="rounded=1;strokeColor=#9673a6;strokeWidth=2;dashed=0;fontSize=9;fontColor=#9673a6;" edge="1" parent="1" source="fg_n3" target="fg_n4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="fg_intent_box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#999999;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="640" width="960" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="fg_intent_title" value="&lt;b&gt;Intent-Adaptive Retrieval&lt;/b&gt;  — different queries activate different graphs" style="text;html=1;align=left;fontSize=11;fillColor=none;strokeColor=none;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="60" y="650" width="500" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="fg_why" value="&lt;b&gt;&quot;Why chose SQLite?&quot;&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;WHY intent → &lt;font color=&quot;#b85450&quot;&gt;Causal 0.70&lt;/font&gt;&lt;br&gt;causal chain: B→A&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE6E6;strokeColor=#b85450;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="60" y="680" width="200" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="fg_when" value="&lt;b&gt;&quot;Recent decisions?&quot;&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;WHEN intent → &lt;font color=&quot;#6c8ebf&quot;&gt;Temporal 0.65&lt;/font&gt;&lt;br&gt;timeline: A→B→C&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E6F3FF;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="290" y="680" width="200" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="fg_entity" value="&lt;b&gt;&quot;About SQLite?&quot;&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;ENTITY intent → &lt;font color=&quot;#82b366&quot;&gt;Entity 0.55&lt;/font&gt;&lt;br&gt;shared entities: A,C,D&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="520" y="680" width="200" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="fg_general" value="&lt;b&gt;&quot;Database related&quot;&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;GENERAL intent → equal 0.25&lt;br&gt;all four graphs weighted equally&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999999;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="750" y="680" width="200" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="fg_legend_title" value="&lt;b&gt;Legend&lt;/b&gt;" style="text;html=1;align=left;fontSize=10;fillColor=none;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry x="40" y="800" width="60" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="fg_leg1" value="&lt;font color=&quot;#6c8ebf&quot;&gt;━━&lt;/font&gt; Temporal" style="text;html=1;align=left;fontSize=9;fillColor=none;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry x="40" y="820" width="100" height="15" as="geometry" />
+        </mxCell>
+        <mxCell id="fg_leg2" value="&lt;font color=&quot;#82b366&quot;&gt;━━&lt;/font&gt; Entity" style="text;html=1;align=left;fontSize=9;fillColor=none;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry x="150" y="820" width="100" height="15" as="geometry" />
+        </mxCell>
+        <mxCell id="fg_leg3" value="&lt;font color=&quot;#b85450&quot;&gt;━━&lt;/font&gt; Causal" style="text;html=1;align=left;fontSize=9;fillColor=none;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry x="260" y="820" width="100" height="15" as="geometry" />
+        </mxCell>
+        <mxCell id="fg_leg4" value="&lt;font color=&quot;#9673a6&quot;&gt;━━&lt;/font&gt; Semantic" style="text;html=1;align=left;fontSize=9;fillColor=none;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry x="370" y="820" width="100" height="15" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

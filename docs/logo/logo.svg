@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="800" height="800">
+  <rect width="400" height="400" fill="#1A1A1A"/>
+
+  <!-- Upper-left bracket -->
+  <path d="M 91.5,153.5 L 98.5,146.5 L 98.5,98.5 L 146.5,98.5 L 153.5,91.5 L 91.5,91.5 Z"
+    fill="#D4D4D8"/>
+
+  <!-- Upper-right bracket -->
+  <path d="M 246.5,91.5 L 253.5,98.5 L 301.5,98.5 L 301.5,146.5 L 308.5,153.5 L 308.5,91.5 Z"
+    fill="#D4D4D8"/>
+
+  <!-- Lower-left bracket -->
+  <path d="M 91.5,246.5 L 98.5,253.5 L 98.5,301.5 L 146.5,301.5 L 153.5,308.5 L 91.5,308.5 Z"
+    fill="#D4D4D8"/>
+
+  <!-- Lower-right bracket -->
+  <path d="M 308.5,246.5 L 301.5,253.5 L 301.5,301.5 L 253.5,301.5 L 246.5,308.5 L 308.5,308.5 Z"
+    fill="#D4D4D8"/>
+
+  <!-- Chevron — right (aligned with diamond right vertex) -->
+  <polyline points="265,187 278,200 265,213"
+    fill="none" stroke="#D4D4D8" stroke-width="2" stroke-linecap="square"/>
+
+  <!-- Chevron — left (aligned with diamond left vertex) -->
+  <polyline points="135,187 122,200 135,213"
+    fill="none" stroke="#D4D4D8" stroke-width="2" stroke-linecap="square"/>
+
+  <!-- Center diamond (memory core, rotated 45°) -->
+  <polygon points="200,155 245,200 200,245 155,200"
+    fill="none" stroke="#D4D4D8" stroke-width="7"/>
+</svg>

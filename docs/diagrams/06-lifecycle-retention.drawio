@@ -1,0 +1,106 @@
+<mxfile host="app.diagrams.net" agent="Claude" version="24.0.0" type="device">
+  <diagram id="lifecycle" name="Lifecycle &amp; Retention">
+    <mxGraphModel dx="1422" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="lc_title" value="&lt;b&gt;Lifecycle &amp; Retention Management&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;fontSize=16;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="300" y="10" width="400" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="lc_ei_box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;verticalAlign=top;" vertex="1" parent="1">
+          <mxGeometry x="40" y="60" width="1020" height="200" as="geometry" />
+        </mxCell>
+        <mxCell id="lc_ei_title" value="&lt;b&gt;Effective Importance (EI) — Decay Formula&lt;/b&gt;" style="text;html=1;align=left;fontSize=12;fillColor=none;strokeColor=none;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="60" y="70" width="400" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="lc_formula" value="&lt;font style=&quot;font-size:14px; font-family:monospace;&quot;&gt;EI = base_weight × access_factor × decay_factor × edge_factor&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#6c8ebf;fontSize=14;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="120" y="100" width="860" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="lc_f1" value="&lt;b&gt;base_weight&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;imp 5 → 1.00&lt;br&gt;imp 4 → 0.80&lt;br&gt;imp 3 → 0.50&lt;br&gt;imp 2 → 0.30&lt;br&gt;imp 1 → 0.15&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#E6F3FF;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="60" y="150" width="130" height="95" as="geometry" />
+        </mxCell>
+        <mxCell id="lc_f2" value="&lt;b&gt;access_factor&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;max(1.0,&lt;br&gt;log(1+access_count))&lt;br&gt;&lt;br&gt;frequent retrieval = log growth&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#E6F3FF;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="220" y="150" width="180" height="95" as="geometry" />
+        </mxCell>
+        <mxCell id="lc_f3" value="&lt;b&gt;decay_factor&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;0.5 ^ (days / 30)&lt;br&gt;&lt;br&gt;half-life 30 days&lt;br&gt;30d → 0.50&lt;br&gt;60d → 0.25&lt;br&gt;90d → 0.125&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="430" y="150" width="170" height="95" as="geometry" />
+        </mxCell>
+        <mxCell id="lc_f4" value="&lt;b&gt;edge_factor&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;1.0 + 0.1 × min(edges, 5)&lt;br&gt;&lt;br&gt;more connections = more important&lt;br&gt;0 edges → 1.0&lt;br&gt;5+ edges → 1.5&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="630" y="150" width="180" height="95" as="geometry" />
+        </mxCell>
+        <mxCell id="lc_immune_box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="40" y="290" width="480" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="lc_immune_title" value="&lt;b&gt;Immunity Rules (immune from auto-cleanup)&lt;/b&gt;" style="text;html=1;align=left;fontSize=11;fillColor=none;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry x="60" y="300" width="300" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="lc_im1" value="&lt;font style=&quot;font-size:20px&quot;&gt;🛡&lt;/font&gt; importance ≥ 4" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#E6FFE6;strokeColor=#82b366;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="60" y="330" width="200" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="lc_im2" value="&lt;font style=&quot;font-size:20px&quot;&gt;🛡&lt;/font&gt; access_count ≥ 3" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#E6FFE6;strokeColor=#82b366;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="280" y="330" width="220" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="lc_prune_box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fce5cd;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="560" y="290" width="500" height="200" as="geometry" />
+        </mxCell>
+        <mxCell id="lc_prune_title" value="&lt;b&gt;Auto-Prune (trigger: total &gt; 1000)&lt;/b&gt;" style="text;html=1;align=left;fontSize=11;fillColor=none;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry x="580" y="300" width="400" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="lc_p1" value="Count active insights" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fce5cd;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="580" y="330" width="140" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="lc_pq" value="&gt; 1000?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="750" y="325" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="lc_pe1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;" edge="1" parent="1" source="lc_p1" target="lc_pq">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="lc_p2" value="&lt;font style=&quot;font-size:9px&quot;&gt;Sort by EI ASC&lt;br&gt;exclude immune&lt;br&gt;take bottom 10&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fce5cd;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="860" y="322" width="120" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="lc_pe2" value="Yes" style="edgeStyle=orthogonalEdgeStyle;rounded=1;fontSize=9;" edge="1" parent="1" source="lc_pq" target="lc_p2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="lc_p3" value="Soft delete&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;SET deleted_at = now()&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="860" y="390" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="lc_pe3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;" edge="1" parent="1" source="lc_p2" target="lc_p3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="lc_p4" value="Cascade delete edges" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="860" y="450" width="140" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="lc_pe4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;" edge="1" parent="1" source="lc_p3" target="lc_p4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="lc_pskip" value="No-op" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999999;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="748" y="390" width="80" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="lc_pe5" value="No" style="edgeStyle=orthogonalEdgeStyle;rounded=1;fontSize=9;" edge="1" parent="1" source="lc_pq" target="lc_pskip">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="lc_gc_box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="420" width="480" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="lc_gc_title" value="&lt;b&gt;Manual GC Controls&lt;/b&gt;" style="text;html=1;align=left;fontSize=11;fillColor=none;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry x="60" y="430" width="200" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="lc_gc1" value="&lt;b&gt;gc --threshold 0.5&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;list candidates with EI &lt; 0.5&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="60" y="460" width="200" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="lc_gc2" value="&lt;b&gt;gc --keep &amp;lt;id&amp;gt;&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;access_count += 3 → boost retention&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="280" y="460" width="220" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="lc_time_box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999999;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="555" width="1020" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="lc_time_title" value="&lt;b&gt;EI Decay Over Time (importance=3, no access)&lt;/b&gt;" style="text;html=1;align=left;fontSize=11;fillColor=none;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry x="60" y="562" width="400" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="lc_timeline" value="&lt;font style=&quot;font-family:monospace; font-size:10px&quot;&gt;Day 0   ████████████████████  EI = 0.50  (fresh)&lt;br&gt;Day 15  ███████████████       EI = 0.35  (half-life approaching)&lt;br&gt;Day 30  ██████████            EI = 0.25  (half-life reached)&lt;br&gt;Day 60  █████                 EI = 0.13  (candidate for pruning)&lt;br&gt;Day 90  ██                    EI = 0.06  (likely pruned)&lt;/font&gt;" style="text;html=1;align=left;fontSize=10;fillColor=none;strokeColor=none;verticalAlign=top;" vertex="1" parent="1">
+          <mxGeometry x="60" y="585" width="980" height="80" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

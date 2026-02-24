@@ -1,0 +1,259 @@
+<mxfile host="app.diagrams.net" modified="2026-02-21T00:00:00.000Z" agent="Claude" version="24.0.0" type="device">
+  <diagram id="concept" name="LLM-Supervised Concept">
+    <mxGraphModel dx="1422" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="820" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <!-- ==================== TITLE ==================== -->
+        <mxCell id="t1" value="&lt;b&gt;The LLM-Supervised Pattern&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;strokeColor=none;fillColor=none;fontSize=20;" vertex="1" parent="1">
+          <mxGeometry x="350" y="10" width="700" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="t2" value="Three approaches to agent memory architecture" style="text;html=1;align=center;verticalAlign=middle;strokeColor=none;fillColor=none;fontSize=12;fontColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="400" y="38" width="600" height="20" as="geometry"/>
+        </mxCell>
+
+        <!-- ==================== PATTERN 1: LLM-EMBEDDED ==================== -->
+        <!-- Container: x=60, w=400, center=260 -->
+        <mxCell id="p1_box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F5F5F5;strokeColor=#BDBDBD;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="60" y="68" width="400" height="270" as="geometry"/>
+        </mxCell>
+        <mxCell id="p1_title" value="&lt;b&gt;LLM-Embedded&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;strokeColor=none;fillColor=none;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="60" y="74" width="400" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="p1_rep" value="Mem0 · Letta" style="text;html=1;align=center;verticalAlign=middle;strokeColor=none;fillColor=none;fontSize=10;fontColor=#888888;" vertex="1" parent="1">
+          <mxGeometry x="60" y="96" width="400" height="18" as="geometry"/>
+        </mxCell>
+        <mxCell id="p1_app" value="&lt;b&gt;Application&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#999999;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="185" y="126" width="150" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="p1_llm" value="&lt;b&gt;Embedded LLM&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;Extra API call per memory op&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFCDD2;strokeColor=#C62828;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="170" y="194" width="180" height="44" as="geometry"/>
+        </mxCell>
+        <mxCell id="p1_store" value="&lt;b&gt;Memory Store&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#999999;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="185" y="266" width="150" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="p1_e1" value="every memory op" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#C62828;fontSize=9;fontColor=#C62828;endArrow=classic;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="p1_app" target="p1_llm">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="p1_e2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#999999;endArrow=classic;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="p1_llm" target="p1_store">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="p1_cost" value="💰 Extra API cost" style="text;html=1;align=left;verticalAlign=middle;strokeColor=none;fillColor=none;fontSize=9;fontColor=#C62828;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="356" y="204" width="90" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="p1_cap" value="&lt;i&gt;LLM sits inside the memory pipeline&lt;/i&gt;" style="text;html=1;align=center;verticalAlign=middle;strokeColor=none;fillColor=none;fontSize=10;fontColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="60" y="310" width="400" height="20" as="geometry"/>
+        </mxCell>
+
+        <!-- ==================== PATTERN 2: MCP SERVER ==================== -->
+        <!-- Container: x=480, w=400, center=680 -->
+        <mxCell id="p2_box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F5F5F5;strokeColor=#BDBDBD;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="480" y="68" width="400" height="270" as="geometry"/>
+        </mxCell>
+        <mxCell id="p2_title" value="&lt;b&gt;MCP Server&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;strokeColor=none;fillColor=none;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="480" y="74" width="400" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="p2_rep" value="claude-mem" style="text;html=1;align=center;verticalAlign=middle;strokeColor=none;fillColor=none;fontSize=10;fontColor=#888888;" vertex="1" parent="1">
+          <mxGeometry x="480" y="96" width="400" height="18" as="geometry"/>
+        </mxCell>
+        <mxCell id="p2_llm" value="&lt;b&gt;Host LLM&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#999999;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="605" y="126" width="150" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="p2_mcp" value="&lt;b&gt;MCP Protocol&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;JSON-RPC / stdio&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E3F2FD;strokeColor=#1565C0;fontSize=10;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="590" y="194" width="180" height="44" as="geometry"/>
+        </mxCell>
+        <mxCell id="p2_srv" value="&lt;b&gt;Memory Server&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;+ embedded LLM sub-agents&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFCDD2;strokeColor=#C62828;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="590" y="266" width="180" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="p2_e1" value="tool_use()" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#999999;fontSize=9;fontColor=#999999;endArrow=classic;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="p2_llm" target="p2_mcp">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="p2_e2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#999999;endArrow=classic;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="p2_mcp" target="p2_srv">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="p2_cap" value="&lt;i&gt;Memory as a tool provider via protocol&lt;/i&gt;" style="text;html=1;align=center;verticalAlign=middle;strokeColor=none;fillColor=none;fontSize=10;fontColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="480" y="310" width="400" height="20" as="geometry"/>
+        </mxCell>
+
+        <!-- ==================== PATTERN 3: LLM-SUPERVISED (highlighted) ==================== -->
+        <!-- Container: x=900, w=460, center=1130 -->
+        <mxCell id="p3_box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8F5E9;strokeColor=#2E7D32;strokeWidth=2;arcSize=6;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="900" y="68" width="460" height="270" as="geometry"/>
+        </mxCell>
+        <mxCell id="p3_title" value="&lt;b&gt;LLM-Supervised&lt;/b&gt; ★" style="text;html=1;align=center;verticalAlign=middle;strokeColor=none;fillColor=none;fontSize=15;fontColor=#1B5E20;" vertex="1" parent="1">
+          <mxGeometry x="900" y="74" width="460" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="p3_rep" value="Mnemon" style="text;html=1;align=center;verticalAlign=middle;strokeColor=none;fillColor=none;fontSize=11;fontColor=#2E7D32;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="900" y="96" width="460" height="18" as="geometry"/>
+        </mxCell>
+        <mxCell id="p3_brain" value="&lt;b&gt;Host LLM (Brain)&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;Full context · Opus-level judgment&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF3E0;strokeColor=#E65100;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1020" y="126" width="220" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="p3_organ" value="&lt;b&gt;Binary (Organ)&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;Deterministic · Zero API cost&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E3F2FD;strokeColor=#1565C0;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1020" y="250" width="220" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="p3_e1" value="supervises (CLI)" style="html=1;edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#E65100;strokeWidth=2;endArrow=classic;exitX=0.3;exitY=1;entryX=0.3;entryY=0;fontSize=9;fontColor=#E65100;" edge="1" parent="1" source="p3_brain" target="p3_organ">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="p3_e2" value="surfaces (JSON)" style="html=1;edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#1565C0;strokeWidth=2;endArrow=classic;exitX=0.7;exitY=0;entryX=0.7;entryY=1;fontSize=9;fontColor=#1565C0;" edge="1" parent="1" source="p3_organ" target="p3_brain">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="p3_cap" value="&lt;b&gt;Zero extra API cost&lt;/b&gt; — &lt;i&gt;LLM supervises a standalone binary&lt;/i&gt;" style="text;html=1;align=center;verticalAlign=middle;strokeColor=none;fillColor=none;fontSize=10;fontColor=#1B5E20;" vertex="1" parent="1">
+          <mxGeometry x="900" y="310" width="460" height="20" as="geometry"/>
+        </mxCell>
+
+        <!-- ==================== SEPARATOR ==================== -->
+        <mxCell id="sep" value="" style="line;strokeWidth=1;strokeColor=#CCCCCC;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="60" y="348" width="1300" height="10" as="geometry"/>
+        </mxCell>
+        <mxCell id="sep_label" value="&lt;b&gt;How Mnemon Implements the LLM-Supervised Pattern&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;strokeColor=none;fillColor=none;fontSize=13;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="350" y="360" width="700" height="24" as="geometry"/>
+        </mxCell>
+
+        <!-- ==================== BOTTOM: HOOKS ==================== -->
+        <!-- Hooks aligned to Brain rows: centers at y=450, 520, 590, 660 -->
+        <mxCell id="h_box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFDE7;strokeColor=#F9A825;arcSize=4;" vertex="1" parent="1">
+          <mxGeometry x="125" y="393" width="175" height="380" as="geometry"/>
+        </mxCell>
+        <mxCell id="h_title" value="&lt;b&gt;Lifecycle Hooks&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;strokeColor=none;fillColor=none;fontSize=12;fontColor=#F57F17;" vertex="1" parent="1">
+          <mxGeometry x="125" y="398" width="175" height="22" as="geometry"/>
+        </mxCell>
+        <mxCell id="h_prime" value="&lt;b&gt;SessionStart&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;→ Prime · Load guide.md&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF9C4;strokeColor=#F9A825;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="135" y="426" width="155" height="48" as="geometry"/>
+        </mxCell>
+        <mxCell id="h_remind" value="&lt;b&gt;PromptSubmit&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;→ Remind · Recall?&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF9C4;strokeColor=#F9A825;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="135" y="496" width="155" height="48" as="geometry"/>
+        </mxCell>
+        <mxCell id="h_nudge" value="&lt;b&gt;Stop&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;→ Nudge · Remember?&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF9C4;strokeColor=#F9A825;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="135" y="566" width="155" height="48" as="geometry"/>
+        </mxCell>
+        <mxCell id="h_compact" value="&lt;b&gt;PreCompact&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;→ Compact · Save&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF9C4;strokeColor=#F9A825;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="135" y="636" width="155" height="48" as="geometry"/>
+        </mxCell>
+        <mxCell id="h_note" value="&lt;i&gt;Hooks inject reminders into LLM context&lt;/i&gt;" style="text;html=1;align=center;verticalAlign=middle;strokeColor=none;fillColor=none;fontSize=9;fontColor=#F57F17;" vertex="1" parent="1">
+          <mxGeometry x="135" y="700" width="155" height="30" as="geometry"/>
+        </mxCell>
+
+        <!-- ==================== BOTTOM: BRAIN ==================== -->
+        <!-- Brain decisions aligned with hooks: centers at y=450, 520, 590, 660 -->
+        <mxCell id="b_box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF3E0;strokeColor=#E65100;arcSize=4;" vertex="1" parent="1">
+          <mxGeometry x="325" y="393" width="510" height="380" as="geometry"/>
+        </mxCell>
+        <mxCell id="b_title" value="&lt;b&gt;Host LLM — The Brain&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;strokeColor=none;fillColor=none;fontSize=12;fontColor=#BF360C;" vertex="1" parent="1">
+          <mxGeometry x="325" y="398" width="510" height="22" as="geometry"/>
+        </mxCell>
+        <mxCell id="b_sub" value="High-value judgment · Full conversation context" style="text;html=1;align=center;verticalAlign=middle;strokeColor=none;fillColor=none;fontSize=9;fontColor=#E65100;" vertex="1" parent="1">
+          <mxGeometry x="325" y="418" width="510" height="16" as="geometry"/>
+        </mxCell>
+
+        <!-- guide.md: center y=450 -->
+        <mxCell id="b_guide" value="&lt;b&gt;guide.md&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:8px&quot;&gt;behavioral execution manual&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE0B2;strokeColor=#E65100;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="358" y="434" width="150" height="32" as="geometry"/>
+        </mxCell>
+
+        <!-- Recall: center y=520 -->
+        <mxCell id="b_recall" value="&lt;b&gt;Recall Decision&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;Does this need prior context?&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE0B2;strokeColor=#E65100;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="358" y="499" width="230" height="42" as="geometry"/>
+        </mxCell>
+
+        <!-- Remember: center y=590 -->
+        <mxCell id="b_remember" value="&lt;b&gt;Remember Decision&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;Directive? Conclusion? Observed state?&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE0B2;strokeColor=#E65100;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="358" y="569" width="230" height="42" as="geometry"/>
+        </mxCell>
+
+        <!-- Emergency: center y=660 -->
+        <mxCell id="b_emergency" value="&lt;b&gt;Emergency Save&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;Extract up to 5 critical insights&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE0B2;strokeColor=#E65100;fontSize=9;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="358" y="644" width="230" height="32" as="geometry"/>
+        </mxCell>
+
+        <!-- Sub-Agent: below recall arrow (y=570), connected from Remember -->
+        <mxCell id="b_subagent" value="&lt;b&gt;Sub-Agent (Sonnet)&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;• Read SKILL.md for syntax&lt;br&gt;• Execute remember&lt;br&gt;• Evaluate candidates&lt;br&gt;• Execute link (approved)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F3E5F5;strokeColor=#7B1FA2;fontSize=10;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="630" y="560" width="180" height="100" as="geometry"/>
+        </mxCell>
+
+        <!-- delegate: Remember → Sub-Agent -->
+        <mxCell id="b_e1" value="delegate" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#E65100;fontSize=9;fontColor=#E65100;endArrow=classic;exitX=1;exitY=0.5;entryX=0;entryY=0.2;" edge="1" parent="1" source="b_remember" target="b_subagent">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- ==================== BOTTOM: ORGAN ==================== -->
+        <!-- 5 boxes with 48px spacing, starting at y=501 to align Search with Recall -->
+        <mxCell id="o_box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E3F2FD;strokeColor=#1565C0;arcSize=4;" vertex="1" parent="1">
+          <mxGeometry x="865" y="393" width="410" height="380" as="geometry"/>
+        </mxCell>
+        <mxCell id="o_title" value="&lt;b&gt;Binary — The Organ&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;strokeColor=none;fillColor=none;fontSize=12;fontColor=#0D47A1;" vertex="1" parent="1">
+          <mxGeometry x="865" y="398" width="410" height="22" as="geometry"/>
+        </mxCell>
+        <mxCell id="o_sub" value="Deterministic · Zero API cost · Portable" style="text;html=1;align=center;verticalAlign=middle;strokeColor=none;fillColor=none;fontSize=9;fontColor=#1565C0;" vertex="1" parent="1">
+          <mxGeometry x="865" y="418" width="410" height="16" as="geometry"/>
+        </mxCell>
+
+        <!-- Search: center y=520 (aligned with Recall) -->
+        <mxCell id="o_search" value="&lt;b&gt;Search Engine&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:8px&quot;&gt;Intent detection · RRF fusion · Beam search · Reranking&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#BBDEFB;strokeColor=#1565C0;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="890" y="501" width="360" height="38" as="geometry"/>
+        </mxCell>
+
+        <!-- Graph: +48 -->
+        <mxCell id="o_graph" value="&lt;b&gt;Four-Graph Engine&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:8px&quot;&gt;temporal · entity · causal · semantic  |  auto-edge creation&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#BBDEFB;strokeColor=#1565C0;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="890" y="549" width="360" height="38" as="geometry"/>
+        </mxCell>
+
+        <!-- Store: +48 -->
+        <mxCell id="o_store" value="&lt;b&gt;SQLite WAL Storage&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:8px&quot;&gt;ACID transactions · Single-file database · Schema migrations&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#BBDEFB;strokeColor=#1565C0;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="890" y="597" width="360" height="38" as="geometry"/>
+        </mxCell>
+
+        <!-- Candidate: +48 -->
+        <mxCell id="o_cand" value="&lt;b&gt;Candidate Discovery&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:8px&quot;&gt;Semantic (cos 0.40–0.80) + Causal (regex + 2-hop BFS)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#BBDEFB;strokeColor=#1565C0;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="890" y="645" width="360" height="38" as="geometry"/>
+        </mxCell>
+
+        <!-- Lifecycle: +48 -->
+        <mxCell id="o_lifecycle" value="&lt;b&gt;Dedup &amp;amp; Lifecycle&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:8px&quot;&gt;Diff detection · EI decay · Access boost · Auto-prune · GC&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#BBDEFB;strokeColor=#1565C0;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="890" y="693" width="360" height="38" as="geometry"/>
+        </mxCell>
+
+        <!-- ==================== BOTTOM: ARROWS ==================== -->
+
+        <!-- Hook → Brain: horizontal arrows (same center y) -->
+        <mxCell id="e_h1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#F9A825;dashed=1;endArrow=classic;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="h_prime" target="b_guide">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_h2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#F9A825;dashed=1;endArrow=classic;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="h_remind" target="b_recall">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_h3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#F9A825;dashed=1;endArrow=classic;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="h_nudge" target="b_remember">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_h4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#F9A825;dashed=1;endArrow=classic;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="h_compact" target="b_emergency">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Recall → Search: horizontal arrow (both center y=520) -->
+        <mxCell id="e_recall_out" value="mnemon recall" style="html=1;edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#2E7D32;strokeWidth=2;endArrow=classic;fontSize=9;fontColor=#2E7D32;exitX=1;exitY=0.3;entryX=0;entryY=0.3;" edge="1" parent="1" source="b_recall" target="o_search">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <!-- Search → Recall: return arrow -->
+        <mxCell id="e_recall_in" value="results + signals" style="html=1;edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#2E7D32;strokeWidth=1;dashed=1;endArrow=classic;fontSize=9;fontColor=#2E7D32;exitX=0;exitY=0.7;entryX=1;entryY=0.7;" edge="1" parent="1" source="o_search" target="b_recall">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Sub-Agent → Store: remember/link command -->
+        <mxCell id="e_subagent_out" value="remember / link" style="html=1;edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#7B1FA2;strokeWidth=2;endArrow=classic;fontSize=9;fontColor=#7B1FA2;exitX=1;exitY=0.3;entryX=0;entryY=0.5;" edge="1" parent="1" source="b_subagent" target="o_store">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <!-- Candidate → Sub-Agent: candidates return -->
+        <mxCell id="e_cand_in" value="candidates JSON" style="html=1;edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#7B1FA2;strokeWidth=1;dashed=1;endArrow=classic;fontSize=9;fontColor=#7B1FA2;exitX=0;exitY=0.5;entryX=1;entryY=0.7;" edge="1" parent="1" source="o_cand" target="b_subagent">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- ==================== FOOTER ==================== -->
+        <mxCell id="f_note" value="The host LLM (Opus) makes high-value judgment calls with full conversation context. The binary handles all deterministic work at zero API cost. Sub-agents (Sonnet) execute approved actions cost-efficiently." style="text;html=1;align=center;verticalAlign=middle;strokeColor=none;fillColor=none;fontSize=9;fontColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="200" y="785" width="1000" height="25" as="geometry"/>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

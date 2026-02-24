@@ -1,0 +1,145 @@
+<mxfile host="app.diagrams.net" agent="Claude" version="24.0.0" type="device">
+  <diagram id="recall" name="Recall Pipeline (Default)">
+    <mxGraphModel dx="1422" dy="1400" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="1600" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="s_title" value="&lt;b&gt;mnemon recall Pipeline (Default)&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;fontSize=16;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="300" y="10" width="350" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="s_start" value="mnemon recall &amp;lt;query&amp;gt;&lt;br&gt;[--intent WHY|WHEN|ENTITY|GENERAL] [--limit N] [--basic]" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="250" y="50" width="400" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="s_emb" value="Embed query → 768d vector&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;(Ollama nomic-embed-text, None if unavailable)&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="300" y="120" width="300" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="s_e1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;" edge="1" parent="1" source="s_start" target="s_emb">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="s_intent" value="Intent Detection&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;regex: why/because→WHY | when/time→WHEN | what is→ENTITY | else→GENERAL&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="250" y="185" width="400" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="s_e2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;" edge="1" parent="1" source="s_emb" target="s_intent">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="s_params" value="Adaptive Traversal Params" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="700" y="185" width="180" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="s_ptable" value="&lt;table style=&quot;font-size:9px;&quot;&gt;&lt;tr&gt;&lt;th&gt;Intent&lt;/th&gt;&lt;th&gt;Beam&lt;/th&gt;&lt;th&gt;Depth&lt;/th&gt;&lt;th&gt;Budget&lt;/th&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;WHY&lt;/td&gt;&lt;td&gt;15&lt;/td&gt;&lt;td&gt;5&lt;/td&gt;&lt;td&gt;500&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;WHEN&lt;/td&gt;&lt;td&gt;10&lt;/td&gt;&lt;td&gt;5&lt;/td&gt;&lt;td&gt;400&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;ENTITY&lt;/td&gt;&lt;td&gt;10&lt;/td&gt;&lt;td&gt;4&lt;/td&gt;&lt;td&gt;400&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;GENERAL&lt;/td&gt;&lt;td&gt;10&lt;/td&gt;&lt;td&gt;4&lt;/td&gt;&lt;td&gt;500&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999999;overflow=fill;" vertex="1" parent="1">
+          <mxGeometry x="700" y="220" width="180" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="s_ep" style="edgeStyle=orthogonalEdgeStyle;rounded=1;dashed=1;strokeColor=#999999;" edge="1" parent="1" source="s_intent" target="s_params">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="s_getall" value="get_all_active_insights()&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;O(n) full table scan — current bottleneck&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fce5cd;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="300" y="260" width="300" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="s_e3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;" edge="1" parent="1" source="s_intent" target="s_getall">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="s_anchor_box" value="&lt;b&gt;Multi-Signal Anchor Selection&lt;/b&gt;  (top-20 per signal)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;verticalAlign=top;fontSize=11;align=left;spacingLeft=10;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="80" y="330" width="750" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="s_sig1" value="&lt;b&gt;Signal 1: Keyword&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;keyword_search(all, query, 20)&lt;br&gt;tokenized matching&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="100" y="365" width="170" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="s_sig2" value="&lt;b&gt;Signal 2: Vector&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;scan_embeddings → cosine&lt;br&gt;streaming O(n) brute force&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="290" y="365" width="170" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="s_sig3" value="&lt;b&gt;Signal 3: Recency&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;sort by created_at DESC&lt;br&gt;top-20 most recent&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="480" y="365" width="160" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="s_sig4" value="&lt;b&gt;Signal 4: Entity&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;shared entities&lt;br&gt;with query&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#E6F3FF;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="660" y="365" width="140" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="s_rrf" value="&lt;b&gt;RRF Fusion&lt;/b&gt; (k=60)&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;score = Σ 1/(k + rank_i + 1)  for each signal&lt;br&gt;merge into anchorMap, tag via: keyword|vector|hybrid|temporal|entity&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="250" y="490" width="400" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="s_e4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;" edge="1" parent="1" source="s_anchor_box" target="s_rrf">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="s_topk" value="Sort anchors by RRF score → select top-K" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="300" y="575" width="300" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="s_e5" style="edgeStyle=orthogonalEdgeStyle;rounded=1;" edge="1" parent="1" source="s_rrf" target="s_topk">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="s_beam_box" value="&lt;b&gt;Beam Search&lt;/b&gt;  (per anchor, MAGMA §4.2)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;verticalAlign=top;fontSize=11;align=left;spacingLeft=10;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="130" y="630" width="640" height="200" as="geometry" />
+        </mxCell>
+        <mxCell id="s_pq" value="&lt;b&gt;Priority Queue&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;heapq&lt;br&gt;seed: anchor node&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="150" y="665" width="130" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="s_expand" value="&lt;b&gt;Expand Node&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;get_edges_by_node(node_id)&lt;br&gt;for each neighbor:&lt;br&gt;score = score_u + λ₁·structural + λ₂·semantic&lt;br&gt;(λ₁=1.0, λ₂=0.4)&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="300" y="660" width="260" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="s_budget" value="&lt;b&gt;Budget Check&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;visited &lt; MaxVisited?&lt;br&gt;depth &lt; MaxDepth?&lt;br&gt;beam &lt; BeamWidth?&lt;/font&gt;" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="580" y="660" width="160" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="s_collect" value="Collect traversed nodes&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;with scores, depth, via_edge_type&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="250" y="770" width="250" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="s_eb1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;" edge="1" parent="1" source="s_pq" target="s_expand">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="s_eb2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;" edge="1" parent="1" source="s_expand" target="s_budget">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="s_eb3" value="Yes" style="edgeStyle=orthogonalEdgeStyle;rounded=1;fontSize=9;" edge="1" parent="1" source="s_budget" target="s_pq">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="660" y="750" />
+              <mxPoint x="150" y="750" />
+              <mxPoint x="150" y="692" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="s_e6" style="edgeStyle=orthogonalEdgeStyle;rounded=1;" edge="1" parent="1" source="s_topk" target="s_beam_box">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="s_dedup" value="Deduplicate &amp; Merge results across anchors" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="275" y="860" width="350" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="s_weights" value="Apply Rerank Weights&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;final_score = w_keyword·kw + w_entity·ent + w_similarity·sim + w_graph·graph&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="225" y="915" width="450" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="s_e7" style="edgeStyle=orthogonalEdgeStyle;rounded=1;" edge="1" parent="1" source="s_dedup" target="s_weights">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="s_wtable" value="&lt;table style=&quot;font-size:9px;&quot;&gt;&lt;tr&gt;&lt;th&gt;Mode&lt;/th&gt;&lt;th&gt;KW&lt;/th&gt;&lt;th&gt;Entity&lt;/th&gt;&lt;th&gt;Sim&lt;/th&gt;&lt;th&gt;Graph&lt;/th&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;With embed&lt;/td&gt;&lt;td&gt;0.30&lt;/td&gt;&lt;td&gt;0.15&lt;/td&gt;&lt;td&gt;0.35&lt;/td&gt;&lt;td&gt;0.20&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;No embed&lt;/td&gt;&lt;td&gt;0.45&lt;/td&gt;&lt;td&gt;0.25&lt;/td&gt;&lt;td&gt;0.00&lt;/td&gt;&lt;td&gt;0.30&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999999;overflow=fill;" vertex="1" parent="1">
+          <mxGeometry x="700" y="895" width="200" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="s_ew" style="edgeStyle=orthogonalEdgeStyle;rounded=1;dashed=1;strokeColor=#999999;" edge="1" parent="1" source="s_weights" target="s_wtable">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="s_topo_q" value="Intent == WHY?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="375" y="980" width="150" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="s_e8" style="edgeStyle=orthogonalEdgeStyle;rounded=1;" edge="1" parent="1" source="s_weights" target="s_topo_q">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="s_topo" value="Causal Topological Sort&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;Kahn's algorithm on causal edges&lt;br&gt;causes before effects&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFE6E6;strokeColor=#b85450;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="570" y="985" width="200" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="s_e_topo" value="Yes" style="edgeStyle=orthogonalEdgeStyle;rounded=1;fontSize=9;" edge="1" parent="1" source="s_topo_q" target="s_topo">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="s_skip" value="Sort by score DESC" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999999;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="180" y="990" width="150" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="s_e_skip" value="No" style="edgeStyle=orthogonalEdgeStyle;rounded=1;fontSize=9;" edge="1" parent="1" source="s_topo_q" target="s_skip">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="s_out" value="&lt;b&gt;JSON Output&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;{results: [{insight: {...}, score, intent, via, signals: {keyword, entity, similarity, graph}}],&lt;br&gt; meta: {intent, intent_source, anchor_count, traversed, hint}}&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="200" y="1080" width="500" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="s_e9a" style="edgeStyle=orthogonalEdgeStyle;rounded=1;" edge="1" parent="1" source="s_topo" target="s_out">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="s_e9b" style="edgeStyle=orthogonalEdgeStyle;rounded=1;" edge="1" parent="1" source="s_skip" target="s_out">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

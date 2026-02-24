@@ -1,0 +1,176 @@
+<mxfile host="app.diagrams.net" modified="2026-02-23T00:00:00.000Z" agent="Claude" version="24.0.0" type="device">
+  <diagram id="two-layer" name="Two Layers, Deliberately Decoupled">
+    <mxGraphModel dx="1422" dy="920" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="920" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <!-- ==================== TITLE ==================== -->
+        <mxCell id="title" value="&lt;b&gt;Two Layers, Deliberately Decoupled&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;strokeColor=none;fillColor=none;fontSize=20;" vertex="1" parent="1">
+          <mxGeometry x="300" y="15" width="800" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="subtitle" value="Agent-side pluggability (achieved)  ·  Storage-side pluggability (future direction)" style="text;html=1;align=center;verticalAlign=middle;strokeColor=none;fillColor=none;fontSize=12;fontColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="300" y="42" width="800" height="20" as="geometry"/>
+        </mxCell>
+
+        <!-- ==================== MCP BAR (standardized) ==================== -->
+        <mxCell id="mcp_bar" value="&lt;b&gt;MCP&lt;/b&gt;  (LLM ↔ Tools)  —  standardized" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8EAF6;strokeColor=#7986CB;fontSize=11;fontColor=#3949AB;" vertex="1" parent="1">
+          <mxGeometry x="260" y="74" width="880" height="28" as="geometry"/>
+        </mxCell>
+
+        <!-- ==================== TOP: LLM AGENTS ==================== -->
+        <!-- Agent row background -->
+        <mxCell id="agent_bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F1F8E9;strokeColor=#7CB342;strokeWidth=2;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="160" y="114" width="1080" height="100" as="geometry"/>
+        </mxCell>
+        <mxCell id="agent_label" value="&lt;b&gt;Any LLM CLI Agent&lt;/b&gt;  (pluggable today via binary + skill)" style="text;html=1;align=left;verticalAlign=middle;strokeColor=none;fillColor=none;fontSize=11;fontColor=#558B2F;" vertex="1" parent="1">
+          <mxGeometry x="180" y="116" width="400" height="22" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="claude" value="&lt;b&gt;Claude Code&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px;color:#666&quot;&gt;Skill auto-discovery&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="200" y="144" width="160" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="cursor" value="&lt;b&gt;Cursor&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px;color:#666&quot;&gt;.cursorrules&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="400" y="144" width="160" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="openclaw" value="&lt;b&gt;OpenClaw&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px;color:#666&quot;&gt;Plugin loader&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="600" y="144" width="160" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="other_agent" value="&lt;b&gt;Any LLM CLI&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px;color:#666&quot;&gt;System prompt / rules&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="800" y="144" width="160" height="50" as="geometry"/>
+        </mxCell>
+        <!-- Checkmark for achieved -->
+        <mxCell id="check_agent" value="✓ Achieved" style="text;html=1;align=right;verticalAlign=middle;strokeColor=none;fillColor=none;fontSize=11;fontColor=#2E7D32;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1060" y="116" width="160" height="22" as="geometry"/>
+        </mxCell>
+
+        <!-- ==================== PROTOCOL SURFACE (connection) ==================== -->
+        <mxCell id="proto_surface" value="&lt;b&gt;Protocol Surface&lt;/b&gt;  —  Intent-native CLI commands  ·  Structured JSON  ·  Lifecycle hooks  ·  Signal metadata" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF9C4;strokeColor=#F9A825;fontSize=11;fontColor=#333;" vertex="1" parent="1">
+          <mxGeometry x="260" y="234" width="880" height="36" as="geometry"/>
+        </mxCell>
+
+        <!-- Arrows from agents to protocol surface -->
+        <mxCell id="e_claude" value="" style="endArrow=classic;strokeColor=#82b366;strokeWidth=1.5;exitX=0.5;exitY=1;entryX=0.2;entryY=0;" edge="1" parent="1" source="claude" target="proto_surface">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_cursor" value="" style="endArrow=classic;strokeColor=#82b366;strokeWidth=1.5;exitX=0.5;exitY=1;entryX=0.35;entryY=0;" edge="1" parent="1" source="cursor" target="proto_surface">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_openclaw" value="" style="endArrow=classic;strokeColor=#82b366;strokeWidth=1.5;exitX=0.5;exitY=1;entryX=0.55;entryY=0;" edge="1" parent="1" source="openclaw" target="proto_surface">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_other" value="" style="endArrow=classic;strokeColor=#82b366;strokeWidth=1.5;exitX=0.5;exitY=1;entryX=0.75;entryY=0;" edge="1" parent="1" source="other_agent" target="proto_surface">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- ==================== MNEMON BOX ==================== -->
+        <mxCell id="mnemon_box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FAFAFA;strokeColor=#999999;strokeWidth=2;arcSize=4;" vertex="1" parent="1">
+          <mxGeometry x="160" y="290" width="1080" height="380" as="geometry"/>
+        </mxCell>
+        <mxCell id="mnemon_label" value="&lt;b style=&quot;font-size:16px&quot;&gt;Mnemon&lt;/b&gt;" style="text;html=1;align=left;verticalAlign=middle;strokeColor=none;fillColor=none;fontSize=16;fontColor=#333;" vertex="1" parent="1">
+          <mxGeometry x="180" y="294" width="120" height="30" as="geometry"/>
+        </mxCell>
+
+        <!-- Protocol Layer -->
+        <mxCell id="protocol_box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=2;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="200" y="330" width="1000" height="140" as="geometry"/>
+        </mxCell>
+        <mxCell id="protocol_label" value="&lt;b&gt;Protocol Layer&lt;/b&gt; (Intent-Native)" style="text;html=1;align=left;verticalAlign=middle;strokeColor=none;fillColor=none;fontSize=13;fontColor=#1565C0;" vertex="1" parent="1">
+          <mxGeometry x="220" y="334" width="280" height="24" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="p_cmd" value="&lt;b&gt;Semantic Commands&lt;/b&gt;&lt;br&gt;remember · recall · link&lt;br&gt;&lt;font style=&quot;font-size:8px;color:#888&quot;&gt;not INSERT / SELECT / CREATE EDGE&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#BBDEFB;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="230" y="366" width="180" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="p_hooks" value="&lt;b&gt;Lifecycle Hooks&lt;/b&gt;&lt;br&gt;Prime · Remind&lt;br&gt;Nudge · Compact" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#BBDEFB;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="430" y="366" width="160" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="p_json" value="&lt;b&gt;Structured Output&lt;/b&gt;&lt;br&gt;JSON with signal&lt;br&gt;transparency" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#BBDEFB;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="610" y="366" width="160" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="p_cand" value="&lt;b&gt;Candidate Output&lt;/b&gt;&lt;br&gt;Semantic candidates&lt;br&gt;Causal candidates" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#BBDEFB;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="800" y="366" width="160" height="80" as="geometry"/>
+        </mxCell>
+
+        <!-- Internal boundary (dashed) -->
+        <mxCell id="boundary" value="" style="shape=line;strokeColor=#FF8F00;strokeWidth=2;dashed=1;dashPattern=8 4;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="200" y="489" width="1000" height="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="boundary_label" value="⬇ storage interface (to be abstracted)" style="text;html=1;align=center;verticalAlign=middle;strokeColor=none;fillColor=none;fontSize=10;fontColor=#FF8F00;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="500" y="482" width="400" height="18" as="geometry"/>
+        </mxCell>
+
+        <!-- Storage Engine -->
+        <mxCell id="engine_box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF3E0;strokeColor=#EF6C00;strokeWidth=2;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="200" y="506" width="1000" height="140" as="geometry"/>
+        </mxCell>
+        <mxCell id="engine_label" value="&lt;b&gt;Storage Engine&lt;/b&gt;  (current: SQLite-based)" style="text;html=1;align=left;verticalAlign=middle;strokeColor=none;fillColor=none;fontSize=13;fontColor=#BF360C;" vertex="1" parent="1">
+          <mxGeometry x="220" y="510" width="350" height="24" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="s_graph" value="&lt;b&gt;MAGMA Four-Graph&lt;/b&gt;&lt;br&gt;temporal · entity&lt;br&gt;causal · semantic" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE0B2;strokeColor=#EF6C00;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="230" y="542" width="160" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="s_beam" value="&lt;b&gt;Beam Search&lt;/b&gt;&lt;br&gt;Intent-adaptive&lt;br&gt;graph traversal" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE0B2;strokeColor=#EF6C00;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="420" y="542" width="160" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="s_rrf" value="&lt;b&gt;RRF Fusion&lt;/b&gt;&lt;br&gt;Multi-signal anchor&lt;br&gt;selection + EI decay" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE0B2;strokeColor=#EF6C00;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="610" y="542" width="160" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="s_sqlite" value="&lt;b&gt;SQLite + WAL&lt;/b&gt;&lt;br&gt;Single-file deploy&lt;br&gt;ACID transactions" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE0B2;strokeColor=#EF6C00;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="800" y="542" width="160" height="80" as="geometry"/>
+        </mxCell>
+
+        <!-- ==================== BOTTOM: FUTURE STORAGE BACKENDS ==================== -->
+        <mxCell id="future_bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F5F5F5;strokeColor=#BDBDBD;strokeWidth=1;dashed=1;dashPattern=8 4;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="160" y="704" width="1080" height="100" as="geometry"/>
+        </mxCell>
+        <mxCell id="future_label" value="&lt;b&gt;Future: Pluggable Storage Backends&lt;/b&gt;  (not yet implemented)" style="text;html=1;align=left;verticalAlign=middle;strokeColor=none;fillColor=none;fontSize=11;fontColor=#9E9E9E;" vertex="1" parent="1">
+          <mxGeometry x="180" y="706" width="420" height="22" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="f_pg" value="&lt;b&gt;PostgreSQL&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEEEEE;strokeColor=#BDBDBD;fontSize=11;fontColor=#9E9E9E;" vertex="1" parent="1">
+          <mxGeometry x="240" y="734" width="160" height="46" as="geometry"/>
+        </mxCell>
+        <mxCell id="f_graph" value="&lt;b&gt;Graph DB&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEEEEE;strokeColor=#BDBDBD;fontSize=11;fontColor=#9E9E9E;" vertex="1" parent="1">
+          <mxGeometry x="480" y="734" width="160" height="46" as="geometry"/>
+        </mxCell>
+        <mxCell id="f_remote" value="&lt;b&gt;Remote Service&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEEEEE;strokeColor=#BDBDBD;fontSize=11;fontColor=#9E9E9E;" vertex="1" parent="1">
+          <mxGeometry x="720" y="734" width="160" height="46" as="geometry"/>
+        </mxCell>
+        <mxCell id="f_dots" value="&lt;b&gt;...&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;strokeColor=none;fillColor=none;fontSize=16;fontColor=#BDBDBD;" vertex="1" parent="1">
+          <mxGeometry x="960" y="734" width="80" height="46" as="geometry"/>
+        </mxCell>
+
+        <!-- Dashed arrows from mnemon to future backends -->
+        <mxCell id="e_future" value="" style="endArrow=classic;strokeColor=#BDBDBD;strokeWidth=1.5;dashed=1;dashPattern=6 3;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="mnemon_box" target="future_bg">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- ==================== ODBC/JDBC BAR (standardized) ==================== -->
+        <mxCell id="odbc_bar" value="&lt;b&gt;ODBC / JDBC&lt;/b&gt;  (App ↔ DB)  —  standardized" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8EAF6;strokeColor=#7986CB;fontSize=11;fontColor=#3949AB;" vertex="1" parent="1">
+          <mxGeometry x="260" y="826" width="880" height="28" as="geometry"/>
+        </mxCell>
+
+        <!-- ==================== SIDE ANNOTATIONS ==================== -->
+        <!-- Left side: Skill distribution note -->
+        <mxCell id="skill_note" value="&lt;b&gt;Skill (.md)&lt;/b&gt;&lt;br&gt;Binary ships skill files&lt;br&gt;that teach each LLM&lt;br&gt;the command protocol" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;fontColor=#333;" vertex="1" parent="1">
+          <mxGeometry x="20" y="144" width="120" height="75" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_skill" value="" style="endArrow=classic;strokeColor=#d6b656;strokeWidth=1;dashed=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="skill_note" target="agent_bg">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- ==================== PROTOCOL GAP ANNOTATION ==================== -->
+        <!-- Right side: gap annotation -->
+        <mxCell id="gap_brace_top" value="" style="shape=curlyBracket;whiteSpace=wrap;html=1;rounded=1;flipH=1;size=0.5;strokeColor=#7986CB;strokeWidth=1.5;" vertex="1" parent="1">
+          <mxGeometry x="1260" y="100" width="20" height="760" as="geometry"/>
+        </mxCell>
+        <mxCell id="gap_label" value="&lt;font color=&quot;#3949AB&quot;&gt;Mnemon fills the&lt;br&gt;&lt;b&gt;protocol gap&lt;/b&gt;&lt;br&gt;between MCP&lt;br&gt;and ODBC/JDBC&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;strokeColor=none;fillColor=none;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1286" y="430" width="110" height="60" as="geometry"/>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
