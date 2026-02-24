@@ -1,0 +1,36 @@
+# Binary
+/mnemon
+
+# Local LLM CLI integration (use mnemon setup --global for user-wide install)
+.claude/
+.openclaw/
+
+# IDE
+.idea/
+*.swp
+*.swo
+*~
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+
+# Mnemon data (local dev)
+*.db
+*.db-wal
+*.db-shm
+
+# Test artifacts
+/tmp/
+.testdata/
