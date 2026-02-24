@@ -1,0 +1,23 @@
+{
+  "id": "mnemon",
+  "name": "mnemon",
+  "version": "",
+  "description": "LLM-supervised persistent memory — recall before responding, remember after",
+  "hooks": [
+    "before_prompt_build",
+    "agent_end"
+  ],
+  "entry": "index.js",
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "nudge": {
+        "type": "boolean"
+      },
+      "remind": {
+        "type": "boolean"
+      }
+    }
+  }
+}
