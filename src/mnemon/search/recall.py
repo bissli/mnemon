@@ -23,8 +23,19 @@ TRAVERSAL_PARAMS: dict[str, tuple[int, int, int]] = {
     'GENERAL': (10, 4, 500),
     }
 
-RERANK_WITH_EMBED = (0.30, 0.15, 0.35, 0.20)
-RERANK_NO_EMBED = (0.45, 0.25, 0.0, 0.30)
+RERANK_WEIGHTS: dict[str, tuple[float, float, float, float]] = {
+    'WHY':     (0.10, 0.10, 0.30, 0.50),
+    'WHEN':    (0.15, 0.15, 0.30, 0.40),
+    'ENTITY':  (0.20, 0.40, 0.20, 0.20),
+    'GENERAL': (0.25, 0.25, 0.25, 0.25),
+    }
+
+RERANK_WEIGHTS_NO_EMBED: dict[str, tuple[float, float, float, float]] = {
+    'WHY':     (0.20, 0.10, 0.0, 0.70),
+    'WHEN':    (0.25, 0.15, 0.0, 0.60),
+    'ENTITY':  (0.30, 0.50, 0.0, 0.20),
+    'GENERAL': (0.35, 0.35, 0.0, 0.30),
+    }
 
 
 def get_traversal_params(intent: str) -> tuple[int, int, int]:
@@ -352,9 +363,11 @@ def intent_aware_recall(
         c['graph_score'] = graph_score
 
     if has_embeddings:
-        w_kw, w_ent, w_sim, w_gr = RERANK_WITH_EMBED
+        w_kw, w_ent, w_sim, w_gr = RERANK_WEIGHTS.get(
+            intent, RERANK_WEIGHTS['GENERAL'])
     else:
-        w_kw, w_ent, w_sim, w_gr = RERANK_NO_EMBED
+        w_kw, w_ent, w_sim, w_gr = RERANK_WEIGHTS_NO_EMBED.get(
+            intent, RERANK_WEIGHTS_NO_EMBED['GENERAL'])
 
     results = []
     for c in candidates:

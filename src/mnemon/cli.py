@@ -163,7 +163,8 @@ def _remember_impl(db: 'DB', insight: Insight, content: str, no_diff: bool) -> N
     from mnemon.graph.engine import on_insight_created
     from mnemon.graph.semantic import find_semantic_candidates
     from mnemon.search.diff import diff as run_diff
-    from mnemon.store.node import auto_prune, get_all_active_insights
+    from mnemon.store.node import MAX_INSIGHTS, auto_prune
+    from mnemon.store.node import get_all_active_insights
     from mnemon.store.node import get_all_embeddings, insert_insight
     from mnemon.store.node import refresh_effective_importance
     from mnemon.store.node import soft_delete_insight, update_embedding
@@ -271,7 +272,7 @@ def _remember_impl(db: 'DB', insight: Insight, content: str, no_diff: bool) -> N
             ei_val = 0.0
 
         try:
-            pruned_val = auto_prune(db, 1000, [insight.id])
+            pruned_val = auto_prune(db, MAX_INSIGHTS, [insight.id])
         except Exception:
             pruned_val = 0
 
@@ -696,7 +697,8 @@ def log(ctx: click.Context, limit: int) -> None:
 @click.pass_context
 def gc(ctx: click.Context, threshold: float, limit: int, keep: str) -> None:
     """Garbage collection / retention lifecycle."""
-    from mnemon.store.node import boost_retention, get_insight_by_id
+    from mnemon.store.node import MAX_INSIGHTS, boost_retention
+    from mnemon.store.node import get_insight_by_id
     from mnemon.store.node import get_retention_candidates
     from mnemon.store.node import refresh_effective_importance
     from mnemon.store.oplog import log_op
@@ -745,7 +747,7 @@ def gc(ctx: click.Context, threshold: float, limit: int, keep: str) -> None:
             'threshold': threshold,
             'candidates_found': len(candidates),
             'candidates': out_candidates,
-            'max_insights': 1000,
+            'max_insights': MAX_INSIGHTS,
             'actions': {
                 'purge': 'mnemon forget <id>',
                 'keep': 'mnemon gc --keep <id>',

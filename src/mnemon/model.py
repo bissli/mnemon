@@ -13,12 +13,6 @@ VALID_CATEGORIES = {
 
 VALID_EDGE_TYPES = {'temporal', 'semantic', 'causal', 'entity'}
 
-HALF_LIFE_DAYS = 30.0
-MAX_INSIGHTS = 1000
-PRUNE_BATCH_SIZE = 10
-MAX_OPLOG_ENTRIES = 5000
-DEFAULT_STORE_NAME = 'default'
-
 
 @dataclass
 class Insight:
