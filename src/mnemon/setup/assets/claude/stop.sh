@@ -10,5 +10,5 @@ if echo "$INPUT" | grep -q '"stop_hook_active"[[:space:]]*:[[:space:]]*true'; th
 fi
 
 cat <<'EOF'
-{"decision": "block", "reason": "[mnemon] Memory check: does this exchange contain anything worth storing (user preferences, decisions, corrections, insights, architectural facts)? If yes, delegate to a Task(Bash, model=sonnet) sub-agent. If nothing qualifies, stop without comment."}
+{"decision": "block", "reason": "[mnemon] Memory check: if a conclusion, decision, or preference emerged, evaluate memory via Task(Bash, model=sonnet) sub-agent. If still mid-planning or mid-investigation, stop without storing."}
 EOF

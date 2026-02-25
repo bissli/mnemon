@@ -83,14 +83,16 @@ The agent decides whether to act on this reminder based on the guide.md rules �
 
 **Nudge (Stop) — `stop.sh`**
 
-Runs after each LLM response. Reminds the agent to consider whether the exchange warrants a remember operation. Stays silent if memory was already addressed:
+Runs after each LLM response. Returns a `decision: block` JSON so the agent gets one more turn to evaluate memory. Phase-aware: tells the agent to skip storing if still mid-planning. Stays silent when `stop_hook_active` is true (preventing infinite loops):
 
 ```bash
-MSG=$(echo "$INPUT" | jq -r '.last_assistant_message // ""' 2>/dev/null)
-if echo "$MSG" | grep -qi "mnemon remember\|sub-agent.*remember\|Stored.*imp="; then
-  exit 0  # Already handled
+INPUT=$(cat)
+if echo "$INPUT" | grep -q '"stop_hook_active".*true'; then
+  exit 0
 fi
-echo "[mnemon] Consider: does this exchange warrant a remember sub-agent?"
+cat <<'EOF'
+{"decision": "block", "reason": "[mnemon] Memory check: if a conclusion, decision, or preference emerged, evaluate memory via Task(Bash, model=sonnet) sub-agent. If still mid-planning or mid-investigation, stop without storing."}
+EOF
 ```
 
 **Compact (PreCompact + SessionStart) — `compact.sh` + `prime.sh` (optional)**
