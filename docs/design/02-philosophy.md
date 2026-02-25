@@ -130,6 +130,8 @@ The fewer translation steps between LLM intent and system action, the more faith
 
 The [MAGMA](https://arxiv.org/abs/2601.03236) paper provides the concrete methodology for **what the external environment should contain**. Its key contribution: a single edge type (e.g., vector similarity) is insufficient for memory — different query intents require different relational perspectives. MAGMA's four-graph architecture (temporal, entity, causal, semantic) with intent-adaptive retrieval and multi-signal fusion gives Mnemon its data model and retrieval algorithms.
 
+MAGMA also provides specific hyperparameter values adopted by mnemon. See Table 5 of the MAGMA paper for: anchor top-K (20), RRF constant (60), structural/semantic coefficients (λ1=1.0, λ2=0.3–0.7), max traversal depth (5), and similarity threshold range (0.10–0.30). These values and their derivations are documented inline in [Pipelines](05-pipelines.md) and [Graph Model](04-graph-model.md).
+
 **Graph-LLM Structural Insight: Why This Protocol Shape**
 
 Graph data models are structurally isomorphic to how LLMs organize information. LLM attention, graph data models, and natural language all describe the same thing — weighted associations between entities:

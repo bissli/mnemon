@@ -30,6 +30,11 @@ Insight A (2h ago) ←── backbone ──→ Insight B (1h ago) ←── bac
 
 **Metadata**: `{"sub_type": "backbone"|"proximity", "hours_diff": "2.34"}`
 
+**Rationale:**
+
+- **`TEMPORAL_WINDOW_HOURS = 24`**: One calendar day — a natural session boundary. Memories created within the same day are likely contextually related.
+- **`MAX_PROXIMITY_EDGES = 10`**: Limits fan-out per insert. With ~10 insights/day as typical usage, this connects to most same-day memories without excessive edge density.
+
 ## 4.2 Entity Graph
 
 **Purpose**: Link insights that mention the same entities.
@@ -49,6 +54,11 @@ Insight A ←── entity ──→ Insight B ←── entity ──→ Insigh
 ```
 
 **Metadata**: `{"entity": "Qdrant"}`
+
+**Rationale:**
+
+- **`MAX_ENTITY_LINKS = 5` per entity**: Caps edge creation per shared entity to prevent popular entities (e.g., "Python", "SQLite") from creating O(n) edges on every insert.
+- **`MAX_TOTAL_ENTITY_EDGES = 50`**: Hard cap across all entities per insert. With typical insights mentioning 2–5 entities × 5 links each, 50 is a generous upper bound that prevents pathological cases.
 
 ## 4.3 Causal Graph
 
@@ -73,6 +83,12 @@ Insight A ──── causal ────→ Insight B
 
 This is a quintessential example of the LLM-Supervised philosophy: Binary handles low-cost candidate discovery (regex + token overlap), while the LLM handles high-value causal judgment.
 
+**Rationale:**
+
+- **`MIN_CAUSAL_OVERLAP = 0.15` (15%)**: Requires at least 15% token overlap to suggest a causal link. Below this threshold, shared tokens are likely stopwords or incidental.
+- **`CAUSAL_LOOKBACK = 10`**: Scans the 10 most recent insights from the same source for causal overlap. Balances coverage against scan cost; causal relationships typically form with recent context.
+- **`MAX_CAUSAL_CANDIDATES = 10`**: Caps BFS candidates returned for LLM evaluation. Keeps the LLM's review task manageable.
+
 ## 4.4 Semantic Graph
 
 **Purpose**: Connect semantically similar insights based on meaning.
@@ -86,6 +102,14 @@ This is a quintessential example of the LLM-Supervised philosophy: Binary handle
 | **Ignore**           | < 0.40            | No action                                                           |
 
 **Fallback** (without embeddings): Token overlap rate is used instead of cosine similarity.
+
+**Rationale:**
+
+- **`MIN_SEMANTIC_SIMILARITY = 0.10`**: Lower bound from MAGMA Table 5 ("Sim. Threshold: 0.10–0.30"). Below 0.10, token overlap is noise. *(Cite: MAGMA, Jiang et al., arXiv 2601.03236, Table 5: Sim. Threshold 0.10–0.30)*
+- **`REVIEW_SEMANTIC_THRESHOLD = 0.40`**: Extends MAGMA's single threshold into a three-tier system. 0.40 is the midpoint between the noise floor (0.10) and auto-link (0.80), providing a "worth surfacing for LLM review" zone. Not directly from any paper — mnemon's own tiering.
+- **`AUTO_SEMANTIC_THRESHOLD = 0.80`**: High-confidence cutoff for creating edges without LLM review. With `nomic-embed-text`, 0.80 cosine similarity represents strong semantic overlap in practice. Not from MAGMA (the paper does not define a specific auto-link threshold).
+- **`MAX_SEMANTIC_CANDIDATES = 5`**: Caps candidates surfaced for LLM review. Keeps the review manageable without missing strong matches.
+- **`MAX_AUTO_SEMANTIC_EDGES = 3`**: Limits auto-created edges per insert to prevent over-linking on dense topics.
 
 ```
 Insight A ←── semantic (auto, cos=0.92) ──→ Insight B
@@ -106,6 +130,8 @@ Different query intents activate different graph traversal weights:
 | **GENERAL** | 0.25     | 0.25     | 0.25     | 0.25     |
 
 When asking "why was SQLite chosen," the causal edge weight is highest, so the system traces decision rationale along causal chains. When asking for "memories related to React," the entity edge weight is highest, so the system finds all insights mentioning React.
+
+**Rationale:** Weight distributions follow MAGMA's unnormalized weight ranges (Table 5: `w_causal: 3.0–5.0`, `w_temporal: 0.5–4.0`, `w_entity: 2.5–6.0`, `w_phrase: 2.5–5.0`), normalized to sum to 1.0. The relative ordering is preserved: causal dominates WHY, temporal dominates WHEN, entity dominates ENTITY. GENERAL uses uniform 0.25 as the unbiased baseline. *(Cite: MAGMA, Jiang et al., arXiv 2601.03236, Table 5: intent-specific edge type weights)*
 
 ---
 

@@ -23,6 +23,8 @@ mnemon remember "Chose Qdrant as the vector database" \
 - Content must not exceed 8000 characters
 - Up to 20 tags and 50 entities
 
+**Rationale:** Content limit 8000 chars is a practical upper bound for a single insight — keeps token overlap computation fast and embedding generation within model input limits. Larger content should be decomposed into multiple insights. Max tags = 20 discourages tag abuse while remaining generous. Max entities = 50 accommodates automatic extraction (regex + dictionary) which can produce many matches.
+
 **Step 2: Generate Embedding (outside transaction)**
 - If Ollama is available: HTTP POST -> nomic-embed-text -> 768-dim float64 vector
 - If unavailable: embedding = nil, falls back to token overlap downstream
@@ -34,7 +36,7 @@ Compute similarity against all active insights:
 - **CONFLICT/UPDATE** (sim 0.50–0.90) → soft-delete old insight, insert new as replacement
 - **ADD** (sim < 0.50) → normal insert
 
-This step uses embedding cosine similarity when available, falling back to token overlap. The `--no-diff` flag disables this check.
+This step uses embedding cosine similarity when available, falling back to token overlap. The `--no-diff` flag disables this check. When embedding cosine similarity >= 0.7 and exceeds the token overlap score, cosine overrides — this allows embeddings to detect semantic overlap that token-level comparison misses (e.g., synonyms, paraphrases).
 
 **Step 3: Atomic Transaction**
 
@@ -119,6 +121,12 @@ RRF Score = Σ  1 / (k + rank_i + 1)    (k = 60)
 
 Each insight may rank differently across signals; RRF fusion produces a robust composite ranking.
 
+**Rationale:**
+
+- **`ANCHOR_TOP_K = 20`**: Directly from MAGMA Table 5 ("Vector Top-K: 20"). *(Cite: MAGMA, Jiang et al., arXiv 2601.03236, Table 5: Vector Top-K: 20)*
+- **`RRF_K = 60`**: Standard value from the original RRF paper. Pilot experiments showed MAP scores nearly flat from k=50–90, with k=60 fixed early and validated across four TREC collections. The constant mitigates the impact of high rankings by outlier systems. *(Cite: Cormack, Clarke & Büttcher, "Reciprocal Rank Fusion outperforms Condorcet and individual Rank Learning Methods", SIGIR 2009, Table 1: k=60 near-optimal across k=0–500)*
+- **`VECTOR_SEARCH_MIN_SIM = 0.10`**: Noise floor matching MAGMA's lower similarity threshold bound. Below 0.10, vector search hits add noise rather than signal.
+
 ### Step 3: Beam Search Graph Traversal
 
 Starting from each anchor, Beam Search is performed across the four graphs:
@@ -153,6 +161,12 @@ for each anchor:
 
 WHY queries use a wider beam and deeper traversal because causal chains typically span multiple hops.
 
+**Rationale:**
+
+- **`LAMBDA1 = 1.0`**: Directly from MAGMA Table 5 ("λ1 (Structure Coef.): 1.0 (Base)").
+- **`LAMBDA2 = 0.4`**: Falls within MAGMA's empirically tuned range ("λ2 (Semantic Coef.): 0.3–0.7"). 0.4 chosen as a conservative value — structural signal is weighted 2.5× semantic, prioritizing graph topology over embedding similarity during traversal. *(Cite: MAGMA, Jiang et al., arXiv 2601.03236, Table 5: λ1=1.0, λ2=0.3–0.7)*
+- **Max depth 5** (WHY/WHEN): Directly from MAGMA Table 5 ("Max Depth: 5 hops"). WHY gets beam width 15 (50% wider than base 10) because causal chains typically span more hops — same reasoning as MAGMA's wider traversal for causal queries. GENERAL gets max_visited=500 (matching WHY) because unknown intent should not restrict exploration. WHEN/ENTITY get 400 as a moderate budget — their primary edges (temporal/entity) form shorter chains. *(Cite: MAGMA, Jiang et al., arXiv 2601.03236, Table 5: Max Depth: 5, Max Nodes: 200, scaled up for mnemon's smaller personal-use graphs)*
+
 ### Step 4: Multi-Factor Re-Ranking
 
 For all collected candidates, a four-dimensional score is computed and combined via weighted sum:
@@ -174,6 +188,15 @@ Weights vary by intent:
 | WHEN    | 0.15    | 0.15     | 0.30       | **0.40** |
 | ENTITY  | 0.20    | **0.40** | 0.20       | 0.20     |
 | GENERAL | 0.25    | 0.25     | 0.25       | 0.25     |
+
+**Rationale:** These extend MAGMA's intent-adaptive philosophy (which steers beam search via edge type weights) into the final reranking stage. MAGMA does not define a separate reranking stage — this is mnemon's own extension.
+
+- **WHY**: Graph traversal captures causal chains — the primary signal for "why" queries, weighted at 0.50.
+- **WHEN**: Graph captures temporal ordering; keyword/entity provide supporting context.
+- **ENTITY**: Entity matching is the primary signal (0.40); other signals provide balanced support.
+- **GENERAL**: Uniform weights (0.25 each) — no bias without clear intent.
+
+**No-embed fallback:** When embeddings are unavailable, the similarity weight redistributes to keyword and graph proportionally. For example, WHY becomes (0.20, 0.10, 0.0, 0.70) — graph dominance increases further since there is no semantic signal to offset it.
 
 ### Step 5: WHY Post-Processing — Causal Topological Sort
 
@@ -218,6 +241,12 @@ When `remember` is called, the built-in diff runs before the transaction:
 | > 0.90      | **DUPLICATE**       | Skip insert entirely, return `action="skipped"`    |
 | 0.50 ~ 0.90 | **CONFLICT/UPDATE** | Soft-delete old insight, insert new as replacement |
 | < 0.50      | **ADD**             | Normal insert                                      |
+
+**Rationale:**
+
+- **`> 0.90` DUPLICATE**: Standard near-duplicate threshold in dedup literature. At 0.90+ similarity, content is functionally identical.
+- **`0.50–0.90` CONFLICT/UPDATE**: Wide detection band. Below 0.50, content is sufficiently distinct to coexist; above 0.50, there's enough overlap to suggest the new insight supersedes the old.
+- **`< 0.50` ADD**: Content is distinct enough to stand as an independent insight.
 
 The `--no-diff` flag disables this check for cases where the caller wants unconditional insertion.
 
