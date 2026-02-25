@@ -82,7 +82,7 @@
         <mxCell id="p_cmd" value="&lt;b&gt;Semantic Commands&lt;/b&gt;&lt;br&gt;remember · recall · link&lt;br&gt;&lt;font style=&quot;font-size:8px;color:#888&quot;&gt;not INSERT / SELECT / CREATE EDGE&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#BBDEFB;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
           <mxGeometry x="230" y="366" width="180" height="80" as="geometry"/>
         </mxCell>
-        <mxCell id="p_hooks" value="&lt;b&gt;Lifecycle Hooks&lt;/b&gt;&lt;br&gt;Prime · Remind&lt;br&gt;Nudge · Compact" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#BBDEFB;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+        <mxCell id="p_hooks" value="&lt;b&gt;Lifecycle Hooks&lt;/b&gt;&lt;br&gt;Prime · Remind · Nudge&lt;br&gt;Compact · Recall" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#BBDEFB;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
           <mxGeometry x="430" y="366" width="160" height="80" as="geometry"/>
         </mxCell>
         <mxCell id="p_json" value="&lt;b&gt;Structured Output&lt;/b&gt;&lt;br&gt;JSON with signal&lt;br&gt;transparency" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#BBDEFB;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">

@@ -13,7 +13,7 @@
         <mxCell id="a_claude" value="&lt;b&gt;Claude Code&lt;/b&gt;&lt;br&gt;LLM Agent" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
           <mxGeometry x="70" y="90" width="120" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="a_hooks" value="&lt;b&gt;Hooks&lt;/b&gt;&lt;br&gt;Prime / Remind&lt;br&gt;Nudge / Compact" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+        <mxCell id="a_hooks" value="&lt;b&gt;Hooks&lt;/b&gt;&lt;br&gt;Prime / Remind / Nudge&lt;br&gt;Compact / Recall" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
           <mxGeometry x="220" y="90" width="140" height="60" as="geometry" />
         </mxCell>
         <mxCell id="a_claudemd" value="&lt;b&gt;Guide&lt;/b&gt;&lt;br&gt;~/.mnemon/prompt/&lt;br&gt;recall/remember rules" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
@@ -133,7 +133,7 @@
         <mxCell id="a_ollama_s" value="&lt;b&gt;Ollama&lt;/b&gt;&lt;br&gt;localhost:11434 | nomic-embed-text (768d)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999999;fontSize=10;dashed=1;" vertex="1" parent="1">
           <mxGeometry x="60" y="725" width="300" height="40" as="geometry" />
         </mxCell>
-        <mxCell id="a_fs" value="&lt;b&gt;File System&lt;/b&gt;&lt;br&gt;~/.mnemon/mnemon.db (single file)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999999;fontSize=10;dashed=1;" vertex="1" parent="1">
+        <mxCell id="a_fs" value="&lt;b&gt;File System&lt;/b&gt;&lt;br&gt;~/.mnemon/data/&amp;lt;store&amp;gt;/mnemon.db" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999999;fontSize=10;dashed=1;" vertex="1" parent="1">
           <mxGeometry x="400" y="725" width="280" height="40" as="geometry" />
         </mxCell>
         <mxCell id="a_e1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#999999;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" edge="1" parent="1" source="a_claude" target="a_cmd_rem">

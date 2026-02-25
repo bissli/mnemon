@@ -40,7 +40,7 @@
         <mxCell id="r_diff_check" value="&lt;b&gt;Dedup Check&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;Compute similarity vs all active insights&lt;br&gt;(embedding cosine or token overlap)&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
           <mxGeometry x="220" y="340" width="200" height="55" as="geometry" />
         </mxCell>
-        <mxCell id="r_diff_result" value="&lt;b&gt;Decision&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;DUPLICATE (&gt;0.90) → skip, return early&lt;br&gt;CONFLICT (0.50-0.90) → replace old&lt;br&gt;ADD (&lt;0.50) → continue to insert&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+        <mxCell id="r_diff_result" value="&lt;b&gt;Decision&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;DUPLICATE (&gt;0.90) → skip, return early&lt;br&gt;CONFLICT (0.65-0.90) → replace old&lt;br&gt;ADD (&lt;0.65) → continue to insert&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
           <mxGeometry x="450" y="335" width="230" height="65" as="geometry" />
         </mxCell>
         <mxCell id="r_diff_e" style="edgeStyle=orthogonalEdgeStyle;rounded=1;" edge="1" parent="1" source="r_diff_check" target="r_diff_result">
