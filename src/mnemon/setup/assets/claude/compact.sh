@@ -9,9 +9,7 @@ INPUT=$(cat)
 SESSION_ID=$(echo "$INPUT" | sed -n 's/.*"session_id": *"\([^"]*\)".*/\1/p' | head -1)
 TRIGGER=$(echo "$INPUT" | sed -n 's/.*"trigger": *"\([^"]*\)".*/\1/p' | head -1)
 
-if [ -z "$SESSION_ID" ]; then
-  exit 0
-fi
+[ -z "$SESSION_ID" ] && exit 0
 
 COMPACT_DIR="${HOME}/.mnemon/compact"
 mkdir -p "$COMPACT_DIR"

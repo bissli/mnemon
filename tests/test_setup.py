@@ -289,8 +289,8 @@ def test_compact_hook_script(tmp_path):
     assert 'ts' in data
 
 
-def test_compact_hook_script_no_session():
-    """Compact hook exits silently when session_id is missing."""
+def test_compact_hook_script_no_session(tmp_path):
+    """Compact hook writes no flag when session_id is missing."""
     from importlib.resources import files as pkg_files
     script = str(
         pkg_files('mnemon.setup.assets')
@@ -299,9 +299,12 @@ def test_compact_hook_script_no_session():
     result = subprocess.run(
         ['bash', script],
         check=False, input='{"trigger": "auto"}',
-        capture_output=True, text=True)
+        capture_output=True, text=True,
+        env={**os.environ, 'HOME': str(tmp_path)})
     assert result.returncode == 0
-    assert result.stdout == ''
+
+    compact_dir = tmp_path / '.mnemon' / 'compact'
+    assert not compact_dir.exists()
 
 
 def test_prime_hook_compact_source(tmp_path):
@@ -325,7 +328,7 @@ def test_prime_hook_compact_source(tmp_path):
     assert 'compacted' in result.stdout
     assert 'manual' in result.stdout
     assert 'recall' in result.stdout.lower()
-    assert not flag.exists()
+    assert flag.exists()
 
 
 def test_prime_hook_compact_no_flag(tmp_path):

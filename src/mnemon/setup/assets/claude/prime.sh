@@ -30,9 +30,8 @@ if [ "$SOURCE" = "compact" ]; then
   SESSION_ID=$(echo "$INPUT" | sed -n 's/.*"session_id": *"\([^"]*\)".*/\1/p' | head -1)
   FLAG="${HOME}/.mnemon/compact/${SESSION_ID}.json"
   TRIGGER=""
-  if [ -n "$SESSION_ID" ] && [ -f "$FLAG" ]; then
+  if [ -f "$FLAG" ]; then
     TRIGGER=$(sed -n 's/.*"trigger":"\([^"]*\)".*/\1/p' "$FLAG" | head -1)
-    rm -f "$FLAG"
   fi
   echo "[mnemon] Context was just compacted (${TRIGGER:-auto}). Recall critical context now: mnemon recall \"<topic>\" --limit 5"
 fi
