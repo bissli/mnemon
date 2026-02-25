@@ -14,7 +14,7 @@ def classify_suggestion(
         similarity: float, new_text: str,
         existing_text: str) -> str:
     """Classify the relationship based on similarity and negation signals."""
-    if similarity < 0.5:
+    if similarity < 0.65:
         return 'ADD'
 
     new_lower = new_text.lower()

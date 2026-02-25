@@ -31,11 +31,17 @@ def test_classify_conflict_negation():
 
 
 def test_classify_boundary():
-    """Boundary values: 0.5 not ADD, 0.9 not DUPLICATE."""
-    got = classify_suggestion(0.5, 'some content', 'other content')
+    """Boundary values: 0.65 not ADD, 0.9 not DUPLICATE."""
+    got = classify_suggestion(0.65, 'some content', 'other content')
     assert got != 'ADD'
     got = classify_suggestion(0.9, 'some content', 'other content')
     assert got != 'DUPLICATE'
+
+
+def test_classify_below_new_threshold():
+    """Similarity below 0.65 classifies as ADD."""
+    assert classify_suggestion(0.5, 'some text', 'other text') == 'ADD'
+    assert classify_suggestion(0.6, 'some text', 'other text') == 'ADD'
 
 
 def test_diff_token_only():

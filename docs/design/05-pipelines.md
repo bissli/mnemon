@@ -33,8 +33,8 @@ mnemon remember "Chose Qdrant as the vector database" \
 
 Compute similarity against all active insights:
 - **DUPLICATE** (sim > 0.90) → skip insert entirely, return `action="skipped"`
-- **CONFLICT/UPDATE** (sim 0.50–0.90) → soft-delete old insight, insert new as replacement
-- **ADD** (sim < 0.50) → normal insert
+- **CONFLICT/UPDATE** (sim 0.65–0.90) → soft-delete old insight, insert new as replacement
+- **ADD** (sim < 0.65) → normal insert
 
 This step uses embedding cosine similarity when available, falling back to token overlap. The `--no-diff` flag disables this check. When embedding cosine similarity >= 0.7 and exceeds the token overlap score, cosine overrides — this allows embeddings to detect semantic overlap that token-level comparison misses (e.g., synonyms, paraphrases).
 
@@ -239,14 +239,14 @@ When `remember` is called, the built-in diff runs before the transaction:
 | Similarity  | Action              | Behavior                                           |
 | ----------- | ------------------- | -------------------------------------------------- |
 | > 0.90      | **DUPLICATE**       | Skip insert entirely, return `action="skipped"`    |
-| 0.50 ~ 0.90 | **CONFLICT/UPDATE** | Soft-delete old insight, insert new as replacement |
-| < 0.50      | **ADD**             | Normal insert                                      |
+| 0.65 ~ 0.90 | **CONFLICT/UPDATE** | Soft-delete old insight, insert new as replacement |
+| < 0.65      | **ADD**             | Normal insert                                      |
 
 **Rationale:**
 
 - **`> 0.90` DUPLICATE**: Standard near-duplicate threshold in dedup literature. At 0.90+ similarity, content is functionally identical.
-- **`0.50–0.90` CONFLICT/UPDATE**: Wide detection band. Below 0.50, content is sufficiently distinct to coexist; above 0.50, there's enough overlap to suggest the new insight supersedes the old.
-- **`< 0.50` ADD**: Content is distinct enough to stand as an independent insight.
+- **`0.65–0.90` CONFLICT/UPDATE**: Below 0.65, content is sufficiently distinct to coexist; the higher threshold prevents false-positive replacements in small stores where domain vocabulary overlap is common.
+- **`< 0.65` ADD**: Content is distinct enough to stand as an independent insight.
 
 The `--no-diff` flag disables this check for cases where the caller wants unconditional insertion.
 
