@@ -10,7 +10,7 @@ Mnemon integrates with LLM CLIs through lifecycle hooks, a skill file, and a beh
 
 ## 7.1 Integration Architecture
 
-Three hooks drive the memory lifecycle, plus a delegation guard:
+Five hooks drive the memory lifecycle:
 
 ```
 Session starts
@@ -34,21 +34,25 @@ Session starts
   Nudge (Stop) ─── stop.sh ──→ remind agent to remember
     │
     ▼
+  (when context compacts)
+  Compact (PreCompact) ─── compact.sh ──→ flag file for post-compact recall
+    │
+    ▼
   (before delegating to sub-agents)
   Recall (PreToolUse) ─── task_recall.sh ──→ remind agent to recall before delegation
 ```
 
 Three layers work together:
 
-| Layer     | What                                                                        | Where                    | Role                                                                                 |
-| --------- | --------------------------------------------------------------------------- | ------------------------ | ------------------------------------------------------------------------------------ |
-| **Hooks** | Shell scripts triggered by Claude Code lifecycle events                     | `.claude/hooks/mnemon/`  | Prime (guide), Remind (recall & remember), Nudge (remember), Recall (pre-delegation) |
-| **Skill** | `SKILL.md` — command reference in Claude Code skill format                  | `.claude/skills/mnemon/` | Teaches the LLM *how* to use mnemon commands                                         |
-| **Guide** | `guide.md` — detailed execution manual for recall, remember, and delegation | `~/.mnemon/prompt/`      | Teaches the LLM *when* to recall, *what* to remember, and *how* to delegate          |
+| Layer     | What                                                                        | Where                    | Role                                                                                                               |
+| --------- | --------------------------------------------------------------------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------ |
+| **Hooks** | Shell scripts triggered by Claude Code lifecycle events                     | `.claude/hooks/mnemon/`  | Prime (guide), Remind (recall & remember), Nudge (remember), Compact (pre-compact bridge), Recall (pre-delegation) |
+| **Skill** | `SKILL.md` — command reference in Claude Code skill format                  | `.claude/skills/mnemon/` | Teaches the LLM *how* to use mnemon commands                                                                       |
+| **Guide** | `guide.md` — detailed execution manual for recall, remember, and delegation | `~/.mnemon/prompt/`      | Teaches the LLM *when* to recall, *what* to remember, and *how* to delegate                                        |
 
 ## 7.2 Hook Details
 
-Claude Code fires hooks at specific lifecycle events. Mnemon registers up to three, each with a distinct role in the memory lifecycle, plus an optional delegation guard:
+Claude Code fires hooks at specific lifecycle events. Mnemon registers up to five, each with a distinct role in the memory lifecycle:
 
 **Prime (SessionStart) — `prime.sh`**
 
@@ -89,6 +93,28 @@ fi
 echo "[mnemon] Consider: does this exchange warrant a remember sub-agent?"
 ```
 
+**Compact (PreCompact + SessionStart) — `compact.sh` + `prime.sh` (optional)**
+
+A two-part bridge that preserves memory context across context compaction. PreCompact cannot inject context into the agent's conversation (stdout is verbose-mode only), so the solution uses a flag file relay:
+
+1. `compact.sh` fires at PreCompact — writes a flag file to `~/.mnemon/compact/<session_id>.json` with the trigger type and timestamp
+2. After compaction, Claude Code fires SessionStart with `source=compact`
+3. `prime.sh` detects `source=compact`, reads the flag file for enrichment, and injects a recall instruction the agent can see
+
+The design is defensively layered — `prime.sh` detects compaction from the SessionStart `source` field regardless of whether `compact.sh` ran. The flag file enriches the message with trigger type but is not required.
+
+```bash
+# compact.sh (PreCompact) — writes flag file
+cat > "${COMPACT_DIR}/${SESSION_ID}.json" <<EOF
+{"trigger":"${TRIGGER:-auto}","ts":"$(date -u +%Y-%m-%dT%H:%M:%SZ)"}
+EOF
+
+# prime.sh (SessionStart) — detects compact source, injects recall
+if [ "$SOURCE" = "compact" ]; then
+  echo "[mnemon] Context was just compacted (${TRIGGER:-auto}). Recall critical context now."
+fi
+```
+
 **Recall (PreToolUse) — `task_recall.sh` (optional)**
 
 Fires before the agent delegates to a sub-agent. Reminds the agent to recall relevant context before delegation, ensuring sub-agents receive informed prompts:
@@ -120,10 +146,11 @@ Install scope: Local — this project only (.claude/)
   Select hooks to enable:
     [x] Remind  — remind agent to recall & remember (recommended)
     [x] Nudge   — remind about memory on session end
+    [x] Compact — save context before compaction (recommended)
     [x] Recall  — remind agent to recall before delegating (recommended)
 
 Setup complete!
-  Hooks   prime, remind, nudge, recall
+  Hooks   prime, remind, nudge, compact, recall
   Prompts ~/.mnemon/prompt/ (guide.md, skill.md)
 
 Start a new Claude Code session to activate.
@@ -140,7 +167,7 @@ Key setup options:
 | `--eject`              | Remove all mnemon integrations                                               |
 | `--yes`                | Auto-confirm all prompts (CI-friendly)                                       |
 
-The Prime hook is always installed. Remind, Nudge, and Recall hooks are optional (all enabled by default).
+The Prime hook is always installed. Remind, Nudge, Compact, and Recall hooks are optional (all enabled by default).
 
 ## 7.4 Sub-Agent Delegation
 

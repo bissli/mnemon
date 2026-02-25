@@ -117,6 +117,7 @@ def remove_claude_hooks(data: dict) -> None:
 def add_claude_hooks_selective(
         data: dict, hooks_dir: str,
         remind: bool = False, nudge: bool = False,
+        compact: bool = False,
         task_recall: bool = False) -> None:
     """Idempotently set mnemon hooks in Claude Code settings."""
     remove_claude_hooks(data)
@@ -166,6 +167,21 @@ def add_claude_hooks_selective(
             arr = []
         arr.append(nudge_entry)
         hooks['Stop'] = arr
+
+    if compact:
+        compact_entry = {
+            'hooks': [
+                {
+                    'type': 'command',
+                    'command': os.path.join(hooks_dir, 'compact.sh'),
+                    },
+                ],
+            }
+        arr = hooks.get('PreCompact', [])
+        if not isinstance(arr, list):
+            arr = []
+        arr.append(compact_entry)
+        hooks['PreCompact'] = arr
 
     if task_recall:
         task_recall_entry = {

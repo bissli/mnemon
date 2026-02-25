@@ -120,10 +120,10 @@ Session starts
     │
     ▼
   (when context compacts)
-  Compact (PreCompact) ─── compact.sh ──→ extract critical insights to remember
+  Compact (PreCompact) ─── compact.sh ──→ flag file for post-compact recall
 ```
 
-Four hooks drive the memory lifecycle. **Prime** loads the behavioral guide — a detailed execution manual for recall, remember, and sub-agent delegation. **Remind** prompts the agent to evaluate recall and remember before starting work. **Nudge** reminds the agent to consider remember after finishing work. **Compact** instructs the agent to extract and save critical insights before context compression. **The skill file** teaches command syntax. **The guide** (`~/.mnemon/prompt/guide.md`) defines the detailed rules for when to recall, what to remember, and how to delegate.
+Five hooks drive the memory lifecycle. **Prime** loads the behavioral guide — a detailed execution manual for recall, remember, and sub-agent delegation. **Remind** prompts the agent to evaluate recall and remember before starting work. **Nudge** reminds the agent to consider remember after finishing work. **Compact** bridges context across compaction via a two-part relay: `compact.sh` writes a flag file at PreCompact time, then `prime.sh` detects the post-compact SessionStart and injects a recall instruction the agent can see. **Recall** reminds the agent to recall before delegating to sub-agents. **The skill file** teaches command syntax. **The guide** (`~/.mnemon/prompt/guide.md`) defines the detailed rules for when to recall, what to remember, and how to delegate.
 
 You don't run mnemon commands yourself. The agent does — driven by hooks and guided by the skill and behavioral guide.
 
@@ -131,7 +131,7 @@ You don't run mnemon commands yourself. The agent does — driven by hooks and g
 
 - **Zero user-side operation** — install once, memory runs in the background via hooks
 - **LLM-supervised** — the host LLM decides what to remember, update, and forget; no embedded LLM, no API keys
-- **Hook-based integration** — four lifecycle hooks: Prime (load guide), Remind (recall & remember), Nudge (remember), and Compact (save before compression)
+- **Hook-based integration** — five lifecycle hooks: Prime (load guide), Remind (recall & remember), Nudge (remember), Compact (bridge context across compaction), and Recall (pre-delegation)
 - **Four-graph architecture** — temporal, entity, causal, and semantic edges, not just vector similarity
 - **Intent-native protocol** — three primitives (`remember`, `link`, `recall`) map to the LLM's cognitive vocabulary, not database syntax; structured JSON output with signal transparency
 - **Intent-aware recall** — graph traversal + optional vector search (RRF fusion), enabled by default for all queries

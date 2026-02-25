@@ -36,7 +36,7 @@ Effective Importance (EI) decay formula, immunity rules, auto-pruning, GC comman
 
 ### [7. LLM CLI Integration](design/07-integration.md)
 
-Lifecycle hooks (Prime, Remind, Nudge, Compact), skill file, behavioral guide, automated setup via `mnemon setup`, sub-agent delegation pattern, and adaptation to other LLM CLIs.
+Lifecycle hooks (Prime, Remind, Nudge, Compact, Recall), skill file, behavioral guide, automated setup via `mnemon setup`, sub-agent delegation pattern, and adaptation to other LLM CLIs.
 
 ### [8. Design Decisions & Future Direction](design/08-decisions.md)
 

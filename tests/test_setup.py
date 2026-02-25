@@ -4,6 +4,7 @@ import json
 import os
 import pathlib
 import subprocess
+
 from mnemon.setup.claude import claude_register_hooks
 from mnemon.setup.markdown import eject_memory_block
 from mnemon.setup.settings import add_claude_hooks_selective
@@ -246,6 +247,120 @@ def test_register_hooks_no_permission(tmp_path):
     assert 'Bash(mnemon:*)' not in allow
 
 
+def test_add_claude_hooks_with_compact():
+    """compact=True produces PreCompact entry."""
+    data = {}
+    add_claude_hooks_selective(
+        data, '/hooks/dir', compact=True)
+    hooks = data['hooks']
+    assert 'PreCompact' in hooks
+    entries = hooks['PreCompact']
+    assert len(entries) == 1
+    assert entries[0]['hooks'][0]['command'].endswith(
+        'compact.sh')
+
+
+def test_add_claude_hooks_compact_default_false():
+    """Default (no compact) does NOT create PreCompact."""
+    data = {}
+    add_claude_hooks_selective(data, '/hooks/dir')
+    hooks = data['hooks']
+    assert 'PreCompact' not in hooks
+
+
+def test_compact_hook_script(tmp_path):
+    """Compact hook writes flag file with session info."""
+    from importlib.resources import files as pkg_files
+    script = str(
+        pkg_files('mnemon.setup.assets')
+        .joinpath('claude/compact.sh'))
+
+    result = subprocess.run(
+        ['bash', script],
+        check=False, input='{"session_id": "test-abc-123", "trigger": "manual"}',
+        capture_output=True, text=True,
+        env={**os.environ, 'HOME': str(tmp_path)})
+    assert result.returncode == 0
+
+    flag = tmp_path / '.mnemon' / 'compact' / 'test-abc-123.json'
+    assert flag.exists()
+    data = json.loads(flag.read_text())
+    assert data['trigger'] == 'manual'
+    assert 'ts' in data
+
+
+def test_compact_hook_script_no_session():
+    """Compact hook exits silently when session_id is missing."""
+    from importlib.resources import files as pkg_files
+    script = str(
+        pkg_files('mnemon.setup.assets')
+        .joinpath('claude/compact.sh'))
+
+    result = subprocess.run(
+        ['bash', script],
+        check=False, input='{"trigger": "auto"}',
+        capture_output=True, text=True)
+    assert result.returncode == 0
+    assert result.stdout == ''
+
+
+def test_prime_hook_compact_source(tmp_path):
+    """Prime hook outputs recall instruction on compact source."""
+    from importlib.resources import files as pkg_files
+    script = str(
+        pkg_files('mnemon.setup.assets')
+        .joinpath('claude/prime.sh'))
+
+    compact_dir = tmp_path / '.mnemon' / 'compact'
+    compact_dir.mkdir(parents=True)
+    flag = compact_dir / 'sess-42.json'
+    flag.write_text('{"trigger":"manual","ts":"2026-01-01T00:00:00Z"}')
+
+    result = subprocess.run(
+        ['bash', script],
+        check=False, input='{"source": "compact", "session_id": "sess-42"}',
+        capture_output=True, text=True,
+        env={**os.environ, 'HOME': str(tmp_path)})
+    assert result.returncode == 0
+    assert 'compacted' in result.stdout
+    assert 'manual' in result.stdout
+    assert 'recall' in result.stdout.lower()
+    assert not flag.exists()
+
+
+def test_prime_hook_compact_no_flag(tmp_path):
+    """Prime hook outputs recall instruction even without flag file."""
+    from importlib.resources import files as pkg_files
+    script = str(
+        pkg_files('mnemon.setup.assets')
+        .joinpath('claude/prime.sh'))
+
+    result = subprocess.run(
+        ['bash', script],
+        check=False, input='{"source": "compact", "session_id": "no-flag"}',
+        capture_output=True, text=True,
+        env={**os.environ, 'HOME': str(tmp_path)})
+    assert result.returncode == 0
+    assert 'compacted' in result.stdout
+    assert 'auto' in result.stdout
+
+
+def test_prime_hook_normal_source(tmp_path):
+    """Prime hook does NOT output recall instruction on normal startup."""
+    from importlib.resources import files as pkg_files
+    script = str(
+        pkg_files('mnemon.setup.assets')
+        .joinpath('claude/prime.sh'))
+
+    result = subprocess.run(
+        ['bash', script],
+        check=False, input='{"source": "startup"}',
+        capture_output=True, text=True,
+        env={**os.environ, 'HOME': str(tmp_path)})
+    assert result.returncode == 0
+    assert 'compacted' not in result.stdout
+
+
 def test_stop_hook_script():
     """Stop hook outputs JSON block when inactive, silent when active."""
     from importlib.resources import files as pkg_files
@@ -255,7 +370,7 @@ def test_stop_hook_script():
 
     result_inactive = subprocess.run(
         ['bash', script],
-        input='{"stop_hook_active": false}',
+        check=False, input='{"stop_hook_active": false}',
         capture_output=True, text=True)
     assert result_inactive.returncode == 0
     output = json.loads(result_inactive.stdout.strip())
@@ -264,7 +379,7 @@ def test_stop_hook_script():
 
     result_active = subprocess.run(
         ['bash', script],
-        input='{"stop_hook_active": true}',
+        check=False, input='{"stop_hook_active": true}',
         capture_output=True, text=True)
     assert result_active.returncode == 0
     assert result_active.stdout.strip() == ''
