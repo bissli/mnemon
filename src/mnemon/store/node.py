@@ -324,17 +324,16 @@ def get_latest_insight_by_source(
     return _scan_insight(row)
 
 
-def get_recent_insights_by_source(
-        db: 'DB', source: str, exclude_id: str,
+def get_recent_active_insights(
+        db: 'DB', exclude_id: str,
         limit: int) -> list[Insight]:
-    """Return the N most recent non-deleted insights for a source."""
+    """Return the N most recent non-deleted insights regardless of source."""
     rows = db._query(
         'SELECT id, content, category, importance, tags, entities,'
         ' source, access_count, created_at, updated_at, deleted_at'
-        ' FROM insights WHERE source = ? AND id != ?'
-        ' AND deleted_at IS NULL'
+        ' FROM insights WHERE id != ? AND deleted_at IS NULL'
         ' ORDER BY created_at DESC LIMIT ?',
-        (source, exclude_id, limit)).fetchall()
+        (exclude_id, limit)).fetchall()
     return [_scan_insight(r) for r in rows]
 
 

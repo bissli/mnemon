@@ -86,7 +86,7 @@ This is a quintessential example of the LLM-Supervised philosophy: Binary handle
 **Rationale:**
 
 - **`MIN_CAUSAL_OVERLAP = 0.15` (15%)**: Requires at least 15% token overlap to suggest a causal link. Below this threshold, shared tokens are likely stopwords or incidental.
-- **`CAUSAL_LOOKBACK = 10`**: Scans the 10 most recent insights from the same source for causal overlap. Balances coverage against scan cost; causal relationships typically form with recent context.
+- **`CAUSAL_LOOKBACK = 10`**: Scans the 10 most recent active insights (regardless of source) for causal overlap. Cross-source causal edges allow connections between user-authored and agent-authored insights that share topic overlap. Balances coverage against scan cost; causal relationships typically form with recent context.
 - **`MAX_CAUSAL_CANDIDATES = 10`**: Caps BFS candidates returned for LLM evaluation. Keeps the LLM's review task manageable.
 
 ## 4.4 Semantic Graph

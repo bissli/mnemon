@@ -124,6 +124,38 @@ class TestTokenOverlapIdentical:
         assert token_overlap(s, s) == 1.0
 
 
+class TestHasCausalSignalExpandedKeywords:
+    """Expanded keyword list detects enables/prevents/ensures."""
+
+    def test_has_causal_signal_expanded_keywords(self):
+        """Genuinely causal keywords detected."""
+        cases = [
+            'This enables fast iteration on the design',
+            'The feature prevents data loss during compaction',
+            'This ensures memories survive compaction',
+            ]
+        for text in cases:
+            assert has_causal_signal(text) is True, (
+                f'expected True for: {text}')
+
+
+class TestHasCausalSignalRejectsAmbiguous:
+    """Ambiguous temporal/dependency phrases do not trigger causal signal."""
+
+    def test_has_causal_signal_rejects_ambiguous(self):
+        """Temporal 'since' and dependency verbs are not causal signals."""
+        cases = [
+            'Working on this since yesterday',
+            'Available since Python 3.10',
+            'This requires Python 3.11',
+            'The feature depends on network availability',
+            'Blocked on code review',
+            ]
+        for text in cases:
+            assert has_causal_signal(text) is False, (
+                f'expected False for: {text}')
+
+
 class TestFindCausalSignalMatch:
     """First causal keyword returned when present."""
 

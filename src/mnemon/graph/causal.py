@@ -6,15 +6,18 @@ from datetime import datetime, timezone
 from mnemon.model import Edge, Insight, format_float
 from mnemon.search.keyword import tokenize
 from mnemon.store.edge import insert_edge
-from mnemon.store.node import get_recent_insights_by_source
+from mnemon.store.node import get_recent_active_insights
 
 MIN_CAUSAL_OVERLAP = 0.15
 CAUSAL_LOOKBACK = 10
 MAX_CAUSAL_CANDIDATES = 10
 
 CAUSAL_PATTERN = re.compile(
-    r'(?i)\b(because|therefore|due to|caused by|as a result|decided to|'
-    r'chosen because|so that|in order to|leads to|results in)\b')
+    r'\b(because|therefore|due to|caused by|as a result|decided to|'
+    r'chosen because|so that|in order to|leads to|results in|'
+    r'enables|prevents|consequently|hence|thus)\b|'
+    r'\bthis (ensures|means)\b',
+    re.IGNORECASE)
 
 CAUSES_PATTERN = re.compile(r'(?i)\b(because|caused by|due to)\b')
 ENABLES_PATTERN = re.compile(
@@ -54,8 +57,8 @@ def token_overlap(a: set[str], b: set[str]) -> float:
 
 def create_causal_edges(db: 'DB', insight: Insight) -> int:
     """Create causal edges when insights share token overlap and causal signals."""
-    recent = get_recent_insights_by_source(
-        db, insight.source, insight.id, CAUSAL_LOOKBACK)
+    recent = get_recent_active_insights(
+        db, insight.id, CAUSAL_LOOKBACK)
     if not recent:
         return 0
 

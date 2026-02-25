@@ -214,6 +214,30 @@ class TestCausalInsufficientOverlap:
         assert count == 0
 
 
+class TestCausalCrossSource:
+    """Different sources can form causal edges after source filter relaxation."""
+
+    def test_causal_cross_source(self, tmp_db):
+        """User-authored and agent-authored insights with shared tokens link causally."""
+        now = datetime.now(timezone.utc)
+        user_ins = make_insight(
+            id='cs-1',
+            content='Use SQLite because it is embedded and serverless',
+            source='user', created_at=now - timedelta(hours=1))
+        agent_ins = make_insight(
+            id='cs-2',
+            content='SQLite enables single-file deployment',
+            source='agent', created_at=now)
+        insert_insight(tmp_db, user_ins)
+        insert_insight(tmp_db, agent_ins)
+
+        count = create_causal_edges(tmp_db, agent_ins)
+        assert count >= 1
+
+        edges = get_edges_by_node_and_type(tmp_db, 'cs-2', 'causal')
+        assert len(edges) >= 1
+
+
 # --- BFS ---
 
 
