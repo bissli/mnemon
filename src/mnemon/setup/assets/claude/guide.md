@@ -50,6 +50,15 @@ Tier B (importance 2-3, store unless trivial):
 
 → None of the above → STOP.
 
+**Excluded — never store regardless of tier:**
+- Bug/issue discoveries ("X is broken", "Y doesn't exist", "not yet fixed")
+  — store the *resolution* instead ("Fixed X by doing Y")
+- Code structure snapshots (line counts, function lists, file sizes)
+  — these change with every edit and are always recoverable from the code itself
+- Current-state observations with temporal language ("currently", "not yet",
+  "needs to be", "TODO", "should be changed to")
+- Intermediate investigation findings that will shift once the task completes
+
 **Step 2 — Does a highly overlapping memory already exist?**
 → Yes, incremental new info → UPDATE (merge into existing)
 → Yes, but contradicts/supersedes → REPLACE
@@ -80,7 +89,9 @@ Only provide what to store — content, category, importance, entities, and crea
 The sub-agent will read the mnemon skill and execute the correct commands itself.
 
 Do NOT: write CLI commands or workflow steps in the sub-agent prompt (the sub-agent has access to the skill docs and will use the correct flags).
-Do NOT remember operational/public/git-tracked/transient info.
+Do NOT remember operational/public/git-tracked/transient info (bug reports,
+code snapshots, investigation notes, TODO items, anything recoverable from
+the codebase itself).
 
 ### Causal links — after writing
 
