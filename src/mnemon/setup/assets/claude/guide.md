@@ -50,6 +50,13 @@ Tier B (importance 2-3, store unless trivial):
 
 → None of the above → STOP.
 
+**Category mapping** (pass via `--cat`):
+- User stated preference → `preference`
+- Architectural/design decision with rationale → `decision`
+- Discovered fact about a system, tool, or domain → `fact`
+- Reasoning conclusion synthesized from multiple sources → `insight`
+- Background context (project setup, user role, environment) → `context`
+
 **Excluded — never store regardless of tier:**
 
 Recoverability test: *Can this fact be recovered from the project's code,

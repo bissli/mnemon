@@ -40,7 +40,12 @@ mnemon store remove <name>
 
 - Never run `remember` or `link` in the main conversation — always delegate to a sub-agent.
 - Do not store secrets, passwords, or tokens.
-- Categories: `preference` · `decision` · `insight` · `fact` · `context`
+- Categories (`--cat`):
+  - `preference` — user-stated likes, dislikes, style choices ("I prefer X over Y")
+  - `decision` — architectural/design choices with rationale ("chose X because Y")
+  - `fact` — discovered truths about systems, tools, domains
+  - `insight` — non-trivial conclusions from multi-source reasoning
+  - `context` — background about user, project, environment
 - Edge types: `temporal` · `semantic` · `causal` · `entity`
 - Max 8,000 chars per insight.
 
