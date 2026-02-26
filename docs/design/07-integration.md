@@ -83,7 +83,7 @@ The agent decides whether to act on this reminder based on the guide.md rules â€
 
 **Nudge (Stop) â€” `stop.sh`**
 
-Runs after each LLM response. Returns a `decision: block` JSON so the agent gets one more turn to evaluate memory. Phase-aware: tells the agent to skip storing if still mid-planning. Stays silent when `stop_hook_active` is true (preventing infinite loops):
+Runs after each LLM response. Returns a `decision: block` JSON so the agent gets one more turn to evaluate memory. Directive-aware: prompts the agent to store if a user preference, decision, or conclusion emerged. Stays silent when `stop_hook_active` is true (preventing infinite loops):
 
 ```bash
 INPUT=$(cat)
@@ -91,7 +91,7 @@ if echo "$INPUT" | grep -q '"stop_hook_active".*true'; then
   exit 0
 fi
 cat <<'EOF'
-{"decision": "block", "reason": "[mnemon] Memory check: if a conclusion, decision, or preference emerged, evaluate memory via Task(Bash, model=sonnet) sub-agent. If still mid-planning or mid-investigation, stop without storing."}
+{"decision": "block", "reason": "[mnemon] Memory check: did the user state a preference, make a decision, give a correction, or reach a conclusion? If yes, store via Task(Bash, model=sonnet) sub-agent. Only skip if the exchange was purely open-ended questions with no resolution."}
 EOF
 ```
 

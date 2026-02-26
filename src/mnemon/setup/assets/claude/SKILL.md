@@ -51,7 +51,7 @@ mnemon store remove <name>
 
 ## Execution
 
-- **Batching**: at stability boundaries, accumulate multiple memories in a single
+- **Batching**: at decision boundaries, accumulate multiple memories in a single
   sub-agent invocation. Provide a bulleted list of what to store (content, category,
   importance, entities, create/update intent). Do not write CLI commands — the
   sub-agent reads this skill doc and executes the correct commands.

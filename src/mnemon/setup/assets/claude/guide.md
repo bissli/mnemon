@@ -17,22 +17,22 @@ Craft a focused, keyword-rich query — do not pass the raw user prompt.
 
 ### Phase awareness — when to write
 
-Not every exchange warrants a memory write. Defer during deliberation, commit at
-decision points.
+**Store immediately** when the user states a preference, makes a decision, gives a
+correction, or says "remember this." These are **user directives** — never defer them,
+even mid-conversation.
 
-**Stability test**: "Would I be comfortable storing this as-is if we stopped here?"
+**Defer** only when the exchange is pure back-and-forth deliberation with no conclusion
+yet (e.g., "what are the pros and cons of X?" without a decision following). Intermediate
+conclusions that will shift with further discussion waste writes.
 
-- **Defer** during planning, investigation, or back-and-forth deliberation.
-  Intermediate conclusions will shift — writing them wastes writes and creates churn.
-- **Write** at stability boundaries: plan finalization, task completion, session end,
-  or when a conclusion is reached that won't change with further discussion.
-- **User directives are always immediate** — explicit preferences, decisions,
-  corrections, or "remember this" bypass phase checks entirely.
+**Stability test** for non-directive content: "Would I be comfortable storing this as-is
+if we stopped here?" If yes, store it. If the conclusion might change in the next
+exchange, defer.
 
 ### Remember — after responding
 
-Run this decision tree at stability boundaries (not mid-deliberation).
-**Bias toward capturing conclusions**: defer during deliberation, commit at decision points.
+Run this decision tree after each response.
+**Bias toward capturing**: when in doubt, store rather than defer.
 
 **Step 1 — Does this exchange contain any of the following?**
 
