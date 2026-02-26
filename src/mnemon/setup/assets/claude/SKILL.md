@@ -43,3 +43,13 @@ mnemon store remove <name>
 - Categories: `preference` · `decision` · `insight` · `fact` · `context`
 - Edge types: `temporal` · `semantic` · `causal` · `entity`
 - Max 8,000 chars per insight.
+
+## Execution
+
+- **Batching**: at stability boundaries, accumulate multiple memories in a single
+  sub-agent invocation. Provide a bulleted list of what to store (content, category,
+  importance, entities, create/update intent). Do not write CLI commands — the
+  sub-agent reads this skill doc and executes the correct commands.
+- **Quality warnings**: after `remember` runs, check `quality_warnings` in the output.
+  If warnings are present, evaluate whether to revise (trim transient content and
+  re-run) or accept if the warning is a false positive.
