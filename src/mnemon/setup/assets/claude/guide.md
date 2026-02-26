@@ -51,13 +51,28 @@ Tier B (importance 2-3, store unless trivial):
 → None of the above → STOP.
 
 **Excluded — never store regardless of tier:**
+
+Recoverability test: *Can this fact be recovered by inspecting the project's
+own code, config files, IaC state, or cloud account?* If yes, do not store it.
+
+Specific categories that fail this test:
 - Bug/issue discoveries ("X is broken", "Y doesn't exist", "not yet fixed")
   — store the *resolution* instead ("Fixed X by doing Y")
-- Code structure snapshots (line counts, function lists, file sizes)
-  — these change with every edit and are always recoverable from the code itself
+- Code or infrastructure state snapshots (line counts, function lists, file
+  sizes, instance IDs, resource counts, drive sizes, "state is clean")
+  — these change with every operation and are always recoverable from source
+- Deployment receipts and verification checklists ("all drives verified",
+  "32 resources deployed", "Terraform apply successful")
 - Current-state observations with temporal language ("currently", "not yet",
-  "needs to be", "TODO", "should be changed to")
+  "needs to be", "TODO", "should be changed to") or completion/verification
+  language ("verified", "confirmed", "all N items done", "state clean")
 - Intermediate investigation findings that will shift once the task completes
+
+**Mixed content** — when content combines recoverable implementation details
+with non-recoverable reasoning (design rationale, platform behavior discovery,
+non-obvious constraint), store *only the reasoning and conclusions*. Strip
+code paths, flag paths, boot sequences, and other details recoverable from
+the codebase itself.
 
 **Step 2 — Does a highly overlapping memory already exist?**
 → Yes, incremental new info → UPDATE (merge into existing)
@@ -67,7 +82,9 @@ Tier B (importance 2-3, store unless trivial):
 **Step 3 — Importance calibration**
 Use the full 2-5 scale intentionally:
 - 5: Cross-session core fact, architectural decision, strong user preference
+  NOT: deployment details, resource inventories, task completion receipts
 - 4: Important context, significant finding, clear user preference
+  NOT: facts recoverable from code/config, routine operational outcomes
 - 3: Useful background, project context, topic of interest
 - 2: Passing mention, soft preference, conversational color
 
@@ -88,6 +105,10 @@ prompt; the sub-agent executes sequential `mnemon remember` calls.
 Only provide what to store — content, category, importance, entities, and create/update intent.
 The sub-agent will read the mnemon skill and execute the correct commands itself.
 
+After the sub-agent runs `remember`, check the output for `quality_warnings`.
+If warnings are present, evaluate whether to revise: trim transient content
+and re-run, or accept if the warning is a false positive.
+
 Do NOT: write CLI commands or workflow steps in the sub-agent prompt (the sub-agent has access to the skill docs and will use the correct flags).
 Do NOT remember operational/public/git-tracked/transient info (bug reports,
 code snapshots, investigation notes, TODO items, anything recoverable from
@@ -97,8 +118,10 @@ the codebase itself).
 
 After writing stable memories, evaluate `causal_candidates` from the remember output.
 When cause-effect relationships exist between memories, call `mnemon link --type causal`.
-Look for reason/consequence pairs — e.g., a decision and the constraint that drove it.
-Optional — requires manual detection; skip when no clear causal signal is present.
+Look for reason/consequence pairs — e.g., a decision and the constraint that drove it,
+a problem discovery and the fix it led to, or a tool limitation and the workaround adopted.
+Always link when causal_candidates are returned and a relationship is plausible;
+skip only when candidates are clearly unrelated.
 
 ### Pre-compaction note
 
