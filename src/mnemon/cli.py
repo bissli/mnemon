@@ -163,6 +163,7 @@ def _remember_impl(db: 'DB', insight: Insight, content: str, no_diff: bool) -> N
     from mnemon.graph.engine import on_insight_created
     from mnemon.graph.semantic import find_semantic_candidates
     from mnemon.search.diff import diff as run_diff
+    from mnemon.search.quality import check_content_quality
     from mnemon.store.node import MAX_INSIGHTS, auto_prune
     from mnemon.store.node import get_all_active_insights
     from mnemon.store.node import get_all_embeddings, insert_insight
@@ -220,6 +221,8 @@ def _remember_impl(db: 'DB', insight: Insight, content: str, no_diff: bool) -> N
         else:
             diff_action = 'added'
 
+    quality_warnings = check_content_quality(content)
+
     if diff_action == 'skipped':
         log_op(db, 'diff-skip', insight.id,
                f'duplicate of {replaced_id}')
@@ -229,6 +232,7 @@ def _remember_impl(db: 'DB', insight: Insight, content: str, no_diff: bool) -> N
             'action': 'skipped',
             'diff_suggestion': diff_suggestion,
             'replaced_id': replaced_id,
+            'quality_warnings': quality_warnings,
             }
         _json_out(output)
         return
@@ -310,6 +314,7 @@ def _remember_impl(db: 'DB', insight: Insight, content: str, no_diff: bool) -> N
         'edges_created': edge_stats,
         'semantic_candidates': semantic_candidates,
         'causal_candidates': causal_candidates,
+        'quality_warnings': quality_warnings,
         'embedded': embedded,
         'effective_importance': ei,
         'auto_pruned': pruned,
