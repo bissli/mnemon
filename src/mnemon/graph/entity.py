@@ -1,9 +1,11 @@
 """Entity extraction (regex + tech dictionary) and entity edge creation."""
 
+import math
 import re
 from datetime import datetime, timezone
 
 from mnemon.model import Edge, Insight
+from mnemon.store.edge import count_insights_with_entity
 from mnemon.store.edge import find_insights_with_entity, insert_edge
 
 MAX_ENTITY_LINKS = 5
@@ -93,10 +95,22 @@ def merge_entities(
     return merged
 
 
+def entity_idf_weight(doc_freq: int, total_docs: int) -> float:
+    """Compute IDF-based weight for an entity edge."""
+    if total_docs <= 1 or doc_freq >= total_docs:
+        return 0.0
+    raw = math.log(total_docs / doc_freq) / math.log(total_docs)
+    return max(raw, 0.1)
+
+
 def create_entity_edges(db: 'DB', insight: Insight) -> int:
     """Create entity co-occurrence edges between the insight and existing insights."""
     if not insight.entities:
         return 0
+
+    from mnemon.store.node import count_active_insights
+    total_docs = count_active_insights(db)
+    use_idf = total_docs > 5
 
     now = datetime.now(timezone.utc)
     count = 0
@@ -109,13 +123,22 @@ def create_entity_edges(db: 'DB', insight: Insight) -> int:
         if not ids:
             continue
 
+        if use_idf:
+            doc_freq = count_insights_with_entity(
+                db, entity, insight.id) + 1
+            weight = entity_idf_weight(doc_freq, total_docs)
+            if weight == 0.0:
+                continue
+        else:
+            weight = 1.0
+
         for target_id in ids:
             if count >= MAX_TOTAL_ENTITY_EDGES:
                 break
             try:
                 insert_edge(db, Edge(
                     source_id=insight.id, target_id=target_id,
-                    edge_type='entity', weight=1.0,
+                    edge_type='entity', weight=weight,
                     metadata={'entity': entity}, created_at=now))
                 count += 1
             except Exception:
@@ -123,7 +146,7 @@ def create_entity_edges(db: 'DB', insight: Insight) -> int:
             try:
                 insert_edge(db, Edge(
                     source_id=target_id, target_id=insight.id,
-                    edge_type='entity', weight=1.0,
+                    edge_type='entity', weight=weight,
                     metadata={'entity': entity}, created_at=now))
                 count += 1
             except Exception:

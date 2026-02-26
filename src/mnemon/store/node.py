@@ -237,16 +237,21 @@ def get_retention_candidates(
     return candidates, total
 
 
+def count_active_insights(db: 'DB') -> int:
+    """Return the number of non-deleted insights."""
+    row = db._query(
+        'SELECT COUNT(*) FROM insights WHERE deleted_at IS NULL'
+        ).fetchone()
+    return row[0]
+
+
 def auto_prune(db: 'DB', max_insights: int,
                exclude_ids: list[str] | None = None) -> int:
     """Soft-delete the lowest EI non-immune insights when over capacity."""
     if exclude_ids is None:
         exclude_ids = []
 
-    row = db._query(
-        'SELECT COUNT(*) FROM insights WHERE deleted_at IS NULL'
-        ).fetchone()
-    total = row[0]
+    total = count_active_insights(db)
     if total <= max_insights:
         return 0
 

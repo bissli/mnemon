@@ -149,6 +149,40 @@ class TestEntityEmpty:
         assert count == 0
 
 
+class TestEntityIdfWeightedEdges:
+    """Entity edges carry IDF-based weights, not fixed 1.0."""
+
+    def test_rare_entity_high_weight(self, tmp_db):
+        """Rare entity shared by 2 of many insights gets high weight."""
+        for i in range(10):
+            insert_insight(tmp_db, make_insight(
+                id=f'idf-{i}', content=f'content {i}',
+                entities=['common']))
+        rare = make_insight(
+            id='idf-rare', content='rare thing',
+            entities=['UniqueEntity'])
+        insert_insight(tmp_db, rare)
+        target = make_insight(
+            id='idf-rare2', content='also rare',
+            entities=['UniqueEntity', 'common'])
+        insert_insight(tmp_db, target)
+
+        create_entity_edges(tmp_db, target)
+
+        edges = get_edges_by_node_and_type(tmp_db, 'idf-rare2', 'entity')
+        rare_edges = [
+            e for e in edges
+            if e.metadata.get('entity') == 'UniqueEntity'
+            ]
+        common_edges = [
+            e for e in edges
+            if e.metadata.get('entity') == 'common'
+            ]
+        assert len(rare_edges) > 0
+        assert len(common_edges) > 0
+        assert rare_edges[0].weight > common_edges[0].weight
+
+
 # --- Causal ---
 
 

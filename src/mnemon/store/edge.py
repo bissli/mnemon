@@ -70,6 +70,18 @@ def find_insights_with_entity(
     return [r[0] for r in rows]
 
 
+def count_insights_with_entity(
+        db: 'DB', entity: str, exclude_id: str) -> int:
+    """Count distinct insights that contain the given entity."""
+    row = db._query(
+        'SELECT COUNT(DISTINCT i.id)'
+        ' FROM insights i, json_each(i.entities) je'
+        ' WHERE i.deleted_at IS NULL AND i.id != ?'
+        ' AND je.value = ?',
+        (exclude_id, entity)).fetchone()
+    return row[0] if row else 0
+
+
 def get_all_edges(db: 'DB') -> list[Edge]:
     """Return all edges in the graph."""
     rows = db._query(

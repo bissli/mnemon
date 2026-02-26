@@ -8,9 +8,11 @@ from mnemon.model import base_weight, is_immune
 from mnemon.store.db import DEFAULT_STORE_NAME, list_stores
 from mnemon.store.db import open_db, read_active, store_dir, store_exists
 from mnemon.store.db import valid_store_name, write_active
+from mnemon.store.edge import count_insights_with_entity
 from mnemon.store.edge import find_insights_with_entity, get_edges_by_node
 from mnemon.store.edge import get_edges_by_source_and_type, insert_edge
 from mnemon.store.node import auto_prune, compute_effective_importance
+from mnemon.store.node import count_active_insights
 from mnemon.store.node import get_all_active_insights, get_embedding
 from mnemon.store.node import get_insight_by_id
 from mnemon.store.node import get_insight_by_id_include_deleted
@@ -550,5 +552,55 @@ class TestStoreExists:
         db = open_db(store_dir(base, 'yes'))
         db.close()
         assert store_exists(base, 'yes') is True
+
+
+# --- CountActiveInsights ---
+
+
+class TestCountActiveInsights:
+    """Count non-deleted insights."""
+
+    def test_count(self, tmp_db):
+        """Returns correct count excluding deleted."""
+        insert_insight(tmp_db, make_insight(id='cnt-1', content='a'))
+        insert_insight(tmp_db, make_insight(id='cnt-2', content='b'))
+        insert_insight(tmp_db, make_insight(id='cnt-3', content='c'))
+        soft_delete_insight(tmp_db, 'cnt-2')
+
+        assert count_active_insights(tmp_db) == 2
+
+    def test_empty(self, tmp_db):
+        """Empty DB returns zero."""
+        assert count_active_insights(tmp_db) == 0
+
+
+# --- CountInsightsWithEntity ---
+
+
+class TestCountInsightsWithEntity:
+    """True doc_freq count for entity IDF (not LIMIT-capped)."""
+
+    def test_count_entity(self, tmp_db):
+        """Counts all insights containing entity, excluding the given ID."""
+        for i in range(10):
+            insert_insight(tmp_db, make_insight(
+                id=f'ent-{i}', content=f'content {i}',
+                entities=['AWS']))
+        insert_insight(tmp_db, make_insight(
+            id='ent-other', content='no aws', entities=['Docker']))
+
+        cnt = count_insights_with_entity(tmp_db, 'AWS', 'ent-0')
+        assert cnt == 9
+
+    def test_excludes_deleted(self, tmp_db):
+        """Deleted insights not counted."""
+        insert_insight(tmp_db, make_insight(
+            id='cd-1', content='a', entities=['Go']))
+        insert_insight(tmp_db, make_insight(
+            id='cd-2', content='b', entities=['Go']))
+        soft_delete_insight(tmp_db, 'cd-2')
+
+        cnt = count_insights_with_entity(tmp_db, 'Go', 'cd-1')
+        assert cnt == 0
 
 
