@@ -70,7 +70,12 @@ mnemon gc --threshold 0.5
 
 # Retain a specific insight (increases access_count by +3)
 mnemon gc --keep <id>
+
+# Review stored insights for content quality issues
+mnemon gc --review
 ```
+
+`gc --review` scans all active insights against transient content patterns (AWS instance IDs, resource counts, verification receipts, deployment receipts, state observations). Returns flagged entries sorted by warning count. Aligns with MAGMA's slow-path philosophy: the fast path (remember) stores quickly with advisory warnings; the slow path (gc --review) enables async quality review.
 
 **Rationale:**
 

@@ -120,6 +120,9 @@ mnemon gc --threshold 0.5 --limit 20
 
 # GC keep — boost an insight's retention
 mnemon gc --keep <id>
+
+# GC review — scan stored insights for content quality issues
+mnemon gc --review
 ```
 
 ### Store Management

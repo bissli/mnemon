@@ -44,7 +44,7 @@ Insight A (2h ago) ←── backbone ──→ Insight B (1h ago) ←── bac
 2. **Technical dictionary**: 200+ common terms (Go, React, SQLite, Kubernetes...)
 3. **User-provided**: `--entities` flag for direct specification
 
-**Automatically created edges**: New insight <-> up to 5 existing insights per shared entity (bidirectional), weight 1.0.
+**Automatically created edges**: New insight <-> up to 5 existing insights per shared entity (bidirectional). Edge weight is computed via IDF: rare entities (appearing in few insights) produce high-weight edges; common entities produce low-weight edges. When the store has ≤5 insights, all entity edges use weight 1.0 (IDF is not meaningful at that scale).
 
 ```
                    ┌─── "Qdrant" ───┐
@@ -59,6 +59,7 @@ Insight A ←── entity ──→ Insight B ←── entity ──→ Insigh
 
 - **`MAX_ENTITY_LINKS = 5` per entity**: Caps edge creation per shared entity to prevent popular entities (e.g., "Python", "SQLite") from creating O(n) edges on every insert.
 - **`MAX_TOTAL_ENTITY_EDGES = 50`**: Hard cap across all entities per insert. With typical insights mentioning 2–5 entities × 5 links each, 50 is a generous upper bound that prevents pathological cases.
+- **IDF weighting**: Entity edge weight uses `log(N/df) / log(N)` (floored at 0.1), where N = total active insights and df = count of insights containing the entity. This compensates for MAGMA's hub-node architecture — without explicit hub nodes, IDF ensures common entities (e.g., "Python") create weak edges while rare entities (e.g., a specific project name) create strong edges, achieving similar traversal discrimination. IDF is disabled when N ≤ 5 (too few documents for meaningful frequency discrimination). IDF affects beam search traversal weight only — Effective Importance uses integer edge count, not weighted sum.
 
 ## 4.3 Causal Graph
 

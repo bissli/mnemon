@@ -74,6 +74,7 @@ COMMIT
   "causal_candidates": [
     {"id": "ghi-789", "content": "...", "hop": 1, "suggested_sub_type": "causes"}
   ],
+  "quality_warnings": [],
   "embedded": true,
   "effective_importance": 0.85,
   "auto_pruned": 0
@@ -81,6 +82,8 @@ COMMIT
 ```
 
 The `action` field indicates what the built-in diff decided: `"added"` (new entry), `"replaced"` (conflict auto-replaced, `replaced_id` contains the old insight ID), or `"skipped"` (duplicate detected, no insert).
+
+The `quality_warnings` field lists any transient content patterns detected (e.g., AWS instance IDs, deployment receipts, state observations). These are advisory — the calling LLM should evaluate whether to revise or accept.
 
 After receiving this output, the LLM can evaluate candidates and establish edges it considers appropriate via the `mnemon link` command.
 

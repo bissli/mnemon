@@ -73,7 +73,7 @@
         <mxCell id="r_temp" value="&lt;b&gt;Temporal&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:8px&quot;&gt;backbone (prev)&lt;br&gt;proximity (24h window)&lt;br&gt;max 10 edges&lt;br&gt;w=1/(1+hours_diff)&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fontSize=9;fillColor=#E6F3FF;strokeColor=#6c8ebf;" vertex="1" parent="1">
           <mxGeometry x="170" y="700" width="130" height="75" as="geometry" />
         </mxCell>
-        <mxCell id="r_ent" value="&lt;b&gt;Entity&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:8px&quot;&gt;regex + 200-word dict&lt;br&gt;merge with --entities&lt;br&gt;bidirectional edges&lt;br&gt;on shared entities&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fontSize=9;fillColor=#E6F3FF;strokeColor=#6c8ebf;" vertex="1" parent="1">
+        <mxCell id="r_ent" value="&lt;b&gt;Entity&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:8px&quot;&gt;regex + 200-word dict&lt;br&gt;merge with --entities&lt;br&gt;bidirectional, IDF-weighted&lt;br&gt;on shared entities&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fontSize=9;fillColor=#E6F3FF;strokeColor=#6c8ebf;" vertex="1" parent="1">
           <mxGeometry x="310" y="700" width="130" height="75" as="geometry" />
         </mxCell>
         <mxCell id="r_caus" value="&lt;b&gt;Causal&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:8px&quot;&gt;keyword regex&lt;br&gt;(because/decided/due to)&lt;br&gt;auto edge if signal&lt;br&gt;found in content&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fontSize=9;fillColor=#FFE6E6;strokeColor=#b85450;" vertex="1" parent="1">
@@ -112,7 +112,7 @@
         <mxCell id="r_cau_cand" value="find_causal_candidates&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;BFS 2-hop neighborhood&lt;br&gt;causal_signal + suggested_sub_type&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFE6E6;strokeColor=#b85450;fontSize=10;" vertex="1" parent="1">
           <mxGeometry x="470" y="980" width="260" height="55" as="geometry" />
         </mxCell>
-        <mxCell id="r_out" value="&lt;b&gt;JSON Output&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;{id, action, diff_suggestion, replaced_id,&lt;br&gt;edges_created: {temporal, entity, causal, semantic},&lt;br&gt;semantic_candidates: [{id, content, auto_linked, ...}],&lt;br&gt;causal_candidates: [{id, content, hop, via_edge, ...}],&lt;br&gt;embedded, effective_importance, auto_pruned}&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+        <mxCell id="r_out" value="&lt;b&gt;JSON Output&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;{id, action, diff_suggestion, replaced_id,&lt;br&gt;edges_created: {temporal, entity, causal, semantic},&lt;br&gt;semantic_candidates: [{id, content, auto_linked, ...}],&lt;br&gt;causal_candidates: [{id, content, hop, via_edge, ...}],&lt;br&gt;quality_warnings,&lt;br&gt;embedded, effective_importance, auto_pruned}&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
           <mxGeometry x="220" y="1070" width="450" height="90" as="geometry" />
         </mxCell>
         <mxCell id="r_e7a" style="edgeStyle=orthogonalEdgeStyle;rounded=1;" edge="1" parent="1" source="r_sem_cand" target="r_out">
