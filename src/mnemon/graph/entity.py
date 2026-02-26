@@ -99,6 +99,8 @@ def entity_idf_weight(doc_freq: int, total_docs: int) -> float:
     """Compute IDF-based weight for an entity edge."""
     if total_docs <= 1 or doc_freq >= total_docs:
         return 0.0
+    if doc_freq <= 0:
+        return 1.0
     raw = math.log(total_docs / doc_freq) / math.log(total_docs)
     return max(raw, 0.1)
 

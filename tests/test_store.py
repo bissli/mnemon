@@ -14,6 +14,7 @@ from mnemon.store.edge import get_edges_by_source_and_type, insert_edge
 from mnemon.store.node import auto_prune, compute_effective_importance
 from mnemon.store.node import count_active_insights
 from mnemon.store.node import get_all_active_insights, get_embedding
+from mnemon.store.node import review_content_quality
 from mnemon.store.node import get_insight_by_id
 from mnemon.store.node import get_insight_by_id_include_deleted
 from mnemon.store.node import increment_access_count, insert_insight
@@ -602,5 +603,41 @@ class TestCountInsightsWithEntity:
 
         cnt = count_insights_with_entity(tmp_db, 'Go', 'cd-1')
         assert cnt == 0
+
+
+# --- ReviewContentQuality ---
+
+
+class TestReviewContentQuality:
+    """Async quality review of stored insights."""
+
+    def test_flags_transient(self, tmp_db):
+        """Transient content is flagged, durable content is not."""
+        insert_insight(tmp_db, make_insight(
+            id='rq-1',
+            content='i-0c220c2402a5245bc deployed via Terraform'))
+        insert_insight(tmp_db, make_insight(
+            id='rq-2',
+            content='SQLite chosen for single-node simplicity'))
+
+        flagged = review_content_quality(tmp_db)
+        assert len(flagged) == 1
+        assert flagged[0]['insight'].id == 'rq-1'
+        assert 'AWS instance ID' in flagged[0]['quality_warnings']
+
+    def test_empty_store(self, tmp_db):
+        """Empty store returns no flagged entries."""
+        flagged = review_content_quality(tmp_db)
+        assert flagged == []
+
+    def test_limit(self, tmp_db):
+        """Limit caps the number of results."""
+        for i in range(5):
+            insert_insight(tmp_db, make_insight(
+                id=f'rl-{i}',
+                content=f'i-0000000000000000{i} deployed via Terraform'))
+
+        flagged = review_content_quality(tmp_db, limit=2)
+        assert len(flagged) == 2
 
 

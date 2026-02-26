@@ -166,3 +166,49 @@ def test_viz_dot(runner):
     result = invoke(runner, ['viz'])
     assert result.exit_code == 0
     assert 'digraph' in result.output
+
+
+def test_remember_quality_warnings(runner):
+    """Remember output includes quality_warnings for transient content."""
+    result = invoke(runner, [
+        'remember', 'i-0c220c2402a5245bc deployed via Terraform',
+        '--no-diff'])
+    assert result.exit_code == 0
+    data = json.loads(result.output)
+    assert 'quality_warnings' in data
+    assert 'AWS instance ID' in data['quality_warnings']
+
+
+def test_remember_no_quality_warnings(runner):
+    """Durable content produces empty quality_warnings."""
+    result = invoke(runner, [
+        'remember', 'SQLite chosen for single-node simplicity',
+        '--no-diff'])
+    assert result.exit_code == 0
+    data = json.loads(result.output)
+    assert data['quality_warnings'] == []
+
+
+def test_gc_review(runner):
+    """GC --review flags transient content."""
+    invoke(runner, [
+        'remember', 'i-0c220c2402a5245bc deployed via Terraform.'
+        ' 32 resources total.', '--no-diff'])
+    invoke(runner, [
+        'remember', 'SQLite chosen for simplicity', '--no-diff'])
+    result = invoke(runner, ['gc', '--review'])
+    assert result.exit_code == 0
+    data = json.loads(result.output)
+    assert data['total_flagged'] == 1
+    assert len(data['review_results']) == 1
+    assert 'AWS instance ID' in data['review_results'][0]['quality_warnings']
+
+
+def test_gc_review_empty(runner):
+    """GC --review with clean store returns zero flagged."""
+    invoke(runner, [
+        'remember', 'SQLite chosen for simplicity', '--no-diff'])
+    result = invoke(runner, ['gc', '--review'])
+    assert result.exit_code == 0
+    data = json.loads(result.output)
+    assert data['total_flagged'] == 0

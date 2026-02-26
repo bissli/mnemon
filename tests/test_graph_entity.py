@@ -179,6 +179,11 @@ class TestEntityIdfWeightEdgeCases:
         w = entity_idf_weight(1, 1)
         assert w == 0.0
 
+    def test_zero_doc_freq(self):
+        """doc_freq=0 (brand new entity) yields maximum weight."""
+        w = entity_idf_weight(0, 100)
+        assert w > 0.9
+
     def test_floor(self):
         """Weight never drops below 0.1 for non-universal entities."""
         w = entity_idf_weight(90, 100)
