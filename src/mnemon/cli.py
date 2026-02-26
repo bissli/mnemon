@@ -699,17 +699,38 @@ def log(ctx: click.Context, limit: int) -> None:
 @click.option('--threshold', default=0.5, type=float, help='EI threshold')
 @click.option('--limit', default=20, type=int, help='Max candidates')
 @click.option('--keep', default='', help='Insight ID to keep')
+@click.option('--review', is_flag=True, default=False,
+              help='Review stored insights for content quality issues')
 @click.pass_context
-def gc(ctx: click.Context, threshold: float, limit: int, keep: str) -> None:
+def gc(ctx: click.Context, threshold: float, limit: int, keep: str,
+       review: bool) -> None:
     """Garbage collection / retention lifecycle."""
     from mnemon.store.node import MAX_INSIGHTS, boost_retention
     from mnemon.store.node import get_insight_by_id
     from mnemon.store.node import get_retention_candidates
     from mnemon.store.node import refresh_effective_importance
+    from mnemon.store.node import review_content_quality
     from mnemon.store.oplog import log_op
 
     db = _open_db(ctx)
     try:
+        if review:
+            flagged = review_content_quality(db, limit)
+            _json_out({
+                'review_results': [{
+                    'id': f['insight'].id,
+                    'content': f['insight'].content,
+                    'importance': f['insight'].importance,
+                    'quality_warnings': f['quality_warnings'],
+                    } for f in flagged],
+                'total_flagged': len(flagged),
+                'actions': {
+                    'forget': 'mnemon forget <id>',
+                    'keep': 'mnemon gc --keep <id>',
+                    },
+                })
+            return
+
         if keep:
             ins = get_insight_by_id(db, keep)
             if ins is None:

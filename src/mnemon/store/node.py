@@ -285,6 +285,24 @@ def auto_prune(db: 'DB', max_insights: int,
     return pruned
 
 
+def review_content_quality(
+        db: 'DB', limit: int = 50) -> list[dict]:
+    """Review active insights for content quality issues."""
+    from mnemon.search.quality import check_content_quality
+
+    insights = get_all_active_insights(db)
+    flagged = []
+    for ins in insights:
+        warnings = check_content_quality(ins.content)
+        if warnings:
+            flagged.append({
+                'insight': ins,
+                'quality_warnings': warnings,
+                })
+    flagged.sort(key=lambda x: len(x['quality_warnings']), reverse=True)
+    return flagged[:limit]
+
+
 def boost_retention(db: 'DB', id: str) -> None:
     """Boost an insight's retention: access_count +3, refreshes last_accessed_at."""
     now = format_timestamp(datetime.now(timezone.utc))

@@ -27,6 +27,7 @@ mnemon forget <id>
 mnemon related <id> --edge causal
 mnemon gc --threshold 0.4
 mnemon gc --keep <id>
+mnemon gc --review
 mnemon status
 mnemon log
 mnemon store list
