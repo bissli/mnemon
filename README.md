@@ -30,13 +30,25 @@ Most memory tools embed their own LLM inside the pipeline. Mnemon takes a differ
 
 Mnemon also addresses a gap in the protocol stack. MCP standardizes how LLMs discover and invoke tools. ODBC/JDBC standardizes how applications access databases. But how LLMs interact with databases using memory semantics — this layer has no protocol. Mnemon's three primitives — `remember`, `link`, `recall` — form an intent-native protocol: command names map to the LLM's cognitive vocabulary (`remember` not INSERT, `recall` not SELECT), and output is structured JSON with signal transparency rather than raw database rows.
 
+### What Gets Remembered
+
+Mnemon stores knowledge that accumulates value across sessions and cannot be recovered from code, config, or infrastructure. It explicitly excludes state snapshots, deployment receipts, bug reports, and anything recoverable from source.
+
+| Category     | Captures                                | Example                                |
+| ------------ | --------------------------------------- | -------------------------------------- |
+| `preference` | User-stated likes, dislikes, style      | "Prefers snake_case, dislikes ORMs"    |
+| `decision`   | Architectural choices with rationale    | "Chose SQLite — zero deps, embeddable" |
+| `fact`       | Durable truths about systems/domains    | "API rate limit is 100 req/s"          |
+| `insight`    | Conclusions from multi-source reasoning | "Beam search outperforms BFS here"     |
+| `context`    | Project background, user environment    | "Monorepo, deploys to AWS ECS"         |
+
+Memory has a **compound interest effect** — the longer it accumulates, the greater its value. LLM engines iterate constantly, skill files cost nearly nothing to write, but memory is a private asset that grows with the user. It is the only component in the agent ecosystem worth deep investment.
+
 <p align="center">
   <img src="docs/diagrams/llm-supervised-concept.drawio.png" width="720" alt="LLM-Supervised Architecture — three patterns compared, with detailed Mnemon implementation showing hooks, brain/organ split, and sub-agent delegation" />
   <br />
   <sub>The LLM-Supervised pattern: hooks drive the lifecycle, the host LLM makes judgment calls, the binary handles deterministic computation.</sub>
 </p>
-
-Memory has a **compound interest effect** — the longer it accumulates, the greater its value. LLM engines iterate constantly, skill files cost nearly nothing to write, but memory is a private asset that grows with the user. It is the only component in the agent ecosystem worth deep investment.
 
 <p align="center">
   <img src="docs/diagrams/10-knowledge-graph.jpg" width="720" alt="Knowledge graph — 87 insights connected by temporal, entity, semantic, and causal edges" />
