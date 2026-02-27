@@ -5,7 +5,7 @@ DIAGRAMS   := docs/diagrams
 DRAWIO_SRC := $(wildcard $(DIAGRAMS)/*.drawio)
 DRAWIO_PNG := $(DRAWIO_SRC:.drawio=.drawio.png)
 
-.PHONY: install uninstall test e2e e2e-agent clean dev diagrams
+.PHONY: install uninstall test e2e clean dev diagrams
 
 install:
 	python3 -m venv $(VENV_DIR)
@@ -27,9 +27,6 @@ test:
 
 e2e:
 	poetry run bash scripts/e2e_test.sh
-
-e2e-agent:
-	bash scripts/e2e_agent_test.sh
 
 clean:
 	rm -rf build/ dist/ *.egg-info src/*.egg-info
