@@ -63,7 +63,7 @@ Recoverability test: *Can this fact be recovered from the project's code,
 config, IaC state, or cloud account?* If yes, do not store it.
 
 - Bug/issue discoveries — store the *resolution*, not the problem
-- State snapshots (line counts, file sizes, resource counts, instance IDs)
+- State snapshots (line numbers, line counts, file sizes, resource counts, instance IDs)
 - Deployment/verification receipts ("all verified", "deployed via", "state clean")
 - Temporal observations ("currently", "not yet", "TODO", "should be changed to")
 - Intermediate findings that will shift once the task completes

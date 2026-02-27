@@ -68,6 +68,68 @@ class TestDeploymentReceipt:
         assert 'deployment receipt' in w
 
 
+class TestLineNumberReference:
+    """Line number references trigger warnings."""
+
+    def test_line_number(self):
+        """'line 42' pattern matched."""
+        w = check_content_quality('Error on line 42 of the module')
+        assert 'line number reference' in w
+
+    def test_line_number_case_insensitive(self):
+        """'Line 100' case-insensitive match."""
+        w = check_content_quality('Line 100 has the bug')
+        assert 'line number reference' in w
+
+
+class TestLineCount:
+    """Line count references trigger warnings."""
+
+    def test_line_count(self):
+        """'4841 lines' pattern matched."""
+        w = check_content_quality('The file grew to 4841 lines')
+        assert 'line count' in w
+
+    def test_two_digit_line_count(self):
+        """'50 lines' also matched."""
+        w = check_content_quality('Function is 50 lines long')
+        assert 'line count' in w
+
+    def test_single_digit_no_match(self):
+        """'3 lines' should not match (single digit)."""
+        w = check_content_quality('Only 3 lines of config')
+        assert 'line count' not in w
+
+
+class TestSymbolLineReference:
+    """Function:line-number references trigger warnings."""
+
+    def test_function_line_ref(self):
+        """'main:28' pattern matched."""
+        w = check_content_quality('See main:28 for the entry point')
+        assert 'function/symbol line reference' in w
+
+    def test_long_symbol_ref(self):
+        """'import_issuer_data:121' pattern matched."""
+        w = check_content_quality(
+            'Fixed import_issuer_data:121 off-by-one')
+        assert 'function/symbol line reference' in w
+
+    def test_single_digit_no_match(self):
+        """'port:5' should not match (single digit)."""
+        w = check_content_quality('Set port:5 for debugging')
+        assert 'function/symbol line reference' not in w
+
+
+class TestLineNumberCorrection:
+    """Arrow-style line corrections trigger warnings."""
+
+    def test_arrow_correction(self):
+        """'422→421' pattern matched."""
+        w = check_content_quality('Line changed 422→421 after edit')
+        assert 'line number correction' in w
+
+
 class TestCleanContentNoWarnings:
     """Durable reasoning produces no warnings."""
 
@@ -110,6 +172,11 @@ class TestNoFalsePositives:
         w = check_content_quality(
             'QuickSetup SSM duplicates via CloudFormation stacks')
         assert w == []
+
+    def test_port_number_no_false_positive(self):
+        """'port:5432' should not trigger symbol line reference."""
+        w = check_content_quality('Connect to port:5 for the service')
+        assert 'function/symbol line reference' not in w
 
 
 class TestMultipleWarnings:

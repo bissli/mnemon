@@ -13,6 +13,10 @@ TRANSIENT_PATTERNS: list[tuple[re.Pattern, str]] = [
     (re.compile(
         r'(?:deployed|completed|applied) via', re.IGNORECASE),
         'deployment receipt'),
+    (re.compile(r'\bline \d+\b', re.IGNORECASE), 'line number reference'),
+    (re.compile(r'\b\d{2,} lines\b'), 'line count'),
+    (re.compile(r'\b\w+:\d{2,}\b'), 'function/symbol line reference'),
+    (re.compile(r'\d+→\d+'), 'line number correction'),
     ]
 
 
