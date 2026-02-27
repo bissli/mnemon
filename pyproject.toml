@@ -19,6 +19,8 @@ httpx = "^0.27"
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.0"
 testcontainers = {version = "^4.10", extras = ["ollama"]}
+matplotlib = "^3.8"
+networkx = "^3.2"
 
 [build-system]
 requires = ["poetry-core"]
