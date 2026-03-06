@@ -136,11 +136,11 @@ def _select_optional_hooks(auto_yes: bool) -> tuple[bool, bool, bool, bool]:
 
 def _init_default_store(data_dir: str) -> None:
     """Ensure the default store exists."""
-    from mnemon.store.db import DB, store_dir, store_exists
+    from mnemon.store.db import store_dir, store_exists, open_db
 
     if not store_exists(data_dir, 'default'):
         sdir = store_dir(data_dir, 'default')
-        db = DB(sdir)
+        db = open_db(sdir)
         db.close()
         print(f'  Initialized default store at {sdir}')
 
