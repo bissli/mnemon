@@ -92,10 +92,10 @@ memman forget <id>
 
 | Flag             | Default   | Description                                                                                                                       |
 | ---------------- | --------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| `--cat`          | `general` | Category: `preference`, `decision`, `fact`, `insight`, `context`, `general`                                                       |
-| `--imp`          | `3`       | Importance: 1–5                                                                                                                   |
+| `--cat`          | `fact`    | Category: `preference`, `decision`, `fact`, `insight`, `context`                                                                  |
+| `--imp`          | `3`       | Importance 1-5, a sort key stored as passed                                                                                       |
 | `--entities`     |           | Comma-separated entities (merged with LLM-extracted)                                                                              |
-| `--source`       | `user`    | Source: `user`, `agent`, `external` — provenance, stored verbatim                                                                 |
+| `--source`       | `user`    | Source: `user` (default), `agent`, or a locator for imported material; stored verbatim; recall filters by exact match             |
 | `--session`      | (env)     | Session id for the temporal chain; defaults to `$MEMMAN_SESSION_ID`, then `$CLAUDE_CODE_SESSION_ID`. No session, no backbone edge |
 | `--no-reconcile` | `false`   | Store the text verbatim: skip extraction and reconciliation, so the write cannot be dropped or folded away                        |
 
@@ -361,7 +361,7 @@ memman scheduler queue purge --stale     # delete rows where status='stale'
 memman scheduler queue purge --skipped   # empty the skipped-write ledger
 ```
 
-A skipped write is a row the pipeline completed without storing an insight: its extraction came back empty, or every extracted fact either reconciled onto an existing insight or deleted one it contradicted. All of these mark the row `done`, and `purge_done` deletes it a minute later, so the `skipped_writes` ledger is what survives. It keeps the full content, the reason, the store, and the session id, and `stats` reports its size under `skipped` (alongside `stale`, which it also reports). The rule is all-or-nothing: a write that stored even one fact is not filed.
+A skipped write is a row the pipeline completed without storing an insight: its extraction came back empty, or every extracted fact restated an existing insight and was folded into it as a corroboration. All of these mark the row `done`, and `purge_done` deletes it a minute later, so the `skipped_writes` ledger is what survives. It keeps the full content, the reason, the store, and the session id, and `stats` reports its size under `skipped` (alongside `stale`, which it also reports). The rule is all-or-nothing: a write that stored even one fact is not filed.
 
 Nothing prunes the ledger on a timer: `purge_done` never reaches it. `queue purge --skipped` empties it, `store remove` drops one store's entries, and a `backup restore` replaces it wholesale with the archive's copy. The listing spans every store, and it holds raw content, so treat it as sensitive. Pass `--no-reconcile` on `remember` to bypass every drop and store the text verbatim.
 

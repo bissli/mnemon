@@ -50,6 +50,16 @@ WITHIN the page and never against a fixed number, because the scale
 belongs to whichever reranker is configured. Report that nothing
 relevant is stored only when no row bears on the query.
 
+Rows assert; CLAUDE.md directs. A `decision` row is history with its
+rationale, not an instruction to follow now. A row that names a file
+path or a symbol is a claim about the code at the row's `created_at`;
+before acting on it, check the path's history since that date with
+`git log --since=<created_at> -- <path>` from the project directory. An
+empty result means the path did not change OR the path is not in this
+repo, since a store can hold rows from several repos; `git log -1 --
+<path>` confirms the path exists here before silence is read as
+currency.
+
 Under `--basic` none of those keys exist. That envelope is
 `{basic: true}`, plus `ignored` when a flag was inert:
 - `ignored`: flag names, present only when non-empty. `--basic`
@@ -97,13 +107,13 @@ Run this decision tree after each response.
 
 **Step 1 — Does this exchange contain any of the following?**
 
-Tier A (importance 4-5, always store):
+Always store:
 - User directive — explicit preference, decision, correction, or "remember this"
 - Reasoning conclusion — non-trivial judgment from multi-source synthesis
 - Durable system/architectural fact discovered during this session
 - User-specific context that no search engine can recover
 
-Tier B (importance 2-3, store unless trivial):
+Store unless trivial:
 - Casual preference revealed in passing ("I usually...", "I prefer...", "I don't like...")
 - Topic explored, with conclusion or current understanding (not just questions)
 - Useful framing or analogy the user offered
@@ -129,24 +139,19 @@ config, IaC state, or cloud account?* If yes, do not store it.
 - Temporal observations ("currently", "not yet", "TODO", "should be changed to")
 - Intermediate findings that will shift once the task completes
 
-**Mixed content**: strip recoverable details (code paths, boot sequences),
-keep only reasoning and conclusions.
+**Mixed content**: strip line numbers, counts, sizes and other state
+snapshots; keep the file path or symbol that locates the claim, and keep
+the reasoning and conclusions.
 
-**Step 2 — Does a highly overlapping memory already exist?**
-→ Yes, incremental new info → UPDATE (merge into existing)
-→ Yes, but contradicts/supersedes → REPLACE
-→ No significant overlap → CREATE
+**Step 2 — Does this correct something already stored?** Then the text
+says so: it names what is no longer true and what is true now, in one
+self-contained statement, and goes in with `memman remember` like any
+other fact. The worker finds every stored row the fact contradicts and
+supersedes each with one merge that keeps their still-true clauses; a
+settled open question is a correction of the row that left it open.
 
-**Step 3 — Importance calibration**
-Use the full 2-5 scale intentionally:
-- 5: Cross-session core fact, architectural decision, strong user preference
-  NOT: deployment details, resource inventories, task completion receipts
-- 4: Important context, significant finding, clear user preference
-  NOT: facts recoverable from code/config, routine operational outcomes
-- 3: Useful background, project context, topic of interest
-- 2: Passing mention, soft preference, conversational color
-
-Importance 2 is the floor — if imp=2 feels weak, reconsider storing at all.
+**`--imp`** is a sort key for listings and tie-breaks (1-5, default 3). Pass
+`--imp 5` for a fact the whole system rests on; otherwise omit it.
 
 **What to store**: conclusions AND sufficient context to understand them.
 The text you pass must be **self-contained** — dereference anaphora
@@ -160,9 +165,10 @@ temporal chain (WHEN recall walks it); a write without it joins no
 chain. Use the session id shown above verbatim. A literal
 `$SESSION_ID` placeholder means this host did not substitute one and
 exports no session variable either: pass your own id, or omit the
-flag and accept a write with no chain. Add
-`--source agent` when storing your own conclusion rather than
-relaying the user's words. The binary is a fast blob-append (~50 ms)
+flag and accept a write with no chain. Pass
+`--source agent` for the agent's own conclusion, and a locator (URL,
+script, dataset pull) for imported material; `user`, the default, is
+for the user's words. The binary is a fast blob-append (~50 ms)
 that queues the text; a background scheduler (systemd timer on Linux,
 launchd on macOS, every 60 s) drains the queue and runs the
 extraction/reconciliation/enrichment pipeline out-of-band. This means
@@ -171,7 +177,7 @@ they become available in later sessions.
 
 ### Behavioral rules — route to CLAUDE.md
 
-When storing a memory that is a **behavioral rule** (importance >= 4, uses universal
+When storing a memory that is a **behavioral rule** (uses universal
 language like "never"/"always"/"mandatory", and contains no project-specific entities),
 write it to the project CLAUDE.md under a `## Directives` section instead of calling
 `memman remember`. Create the section if absent. Directives need guaranteed recall

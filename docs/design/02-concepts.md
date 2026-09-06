@@ -26,7 +26,7 @@
 └──────────────────────────────────────────────┘
 ```
 
-Six categories distinguish the nature of a memory:
+Five categories distinguish the nature of a memory:
 
 | Category     | Meaning                          | Example                                             |
 | ------------ | -------------------------------- | --------------------------------------------------- |
@@ -35,14 +35,10 @@ Six categories distinguish the nature of a memory:
 | `fact`       | Objective fact                   | "API rate limit is 100 req/s"                       |
 | `insight`    | Reasoning conclusion             | "Beam search is more suitable than full BFS for..." |
 | `context`    | Project context                  | "Phase 3 completed, 118 tests passing"              |
-| `general`    | General                          | Content that doesn't fit the above                  |
 
-Importance ranges from 2 to 5 and is a sort key: listings order by it, and recall and the keyword rung break score ties on it. No retention tier reads it; nothing is protected from or offered for deletion by importance (see [05-lifecycle.md](05-lifecycle.md)). The CLI accepts `--imp 1`, but the LLM extraction pipeline floors it at 2 — `1` is reserved for raw `--no-reconcile` writes only.
+Importance is a sort key: listings order by it, and recall and the keyword rung break score ties on it. The value is the caller's: `--imp` (1-5, default 3) is stored as passed, and the extractor does not set it. No retention tier reads it; nothing is protected from or offered for deletion by importance (see [05-lifecycle.md](05-lifecycle.md)).
 
-- **5**: critical decision or strong preference
-- **4**: important fact
-- **3**: standard memory (default `--imp`)
-- **2**: low priority / passing mention (effective floor for extracted facts)
+Exit: the column, its two indexes, the listing-index key, the sort keys and the payload key go in the next schema release when more than 95% of post-release rows carry 3; the column stays when the non-default share is above that.
 
 ## 2.2 Edge (relationship)
 

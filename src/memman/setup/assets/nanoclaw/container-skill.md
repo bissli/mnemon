@@ -56,10 +56,12 @@ Run this decision tree after every substantive response:
   c) Durable observed state — system fact, environment detail, architectural finding
   → No to all → STOP.
 
-**Step 2 — Does a highly overlapping memory already exist?**
-  → Yes, incremental new info → UPDATE (merge into existing)
-  → Yes, but contradicts/supersedes → REPLACE
-  → No significant overlap → CREATE
+**Step 2 — Does this correct something already stored?** Then the text
+says so: it names what is no longer true and what is true now, in one
+self-contained statement, and goes in with `memman remember` like any
+other fact. The worker finds every stored row the fact contradicts and
+supersedes each with one merge that keeps their still-true clauses; a
+settled open question is a correction of the row that left it open.
 
 **Step 3 — Is it worth storing?**
   Rebuilding from scratch costs more than storing + recalling?
@@ -80,21 +82,23 @@ Always pass `--session` with your session id — it links the
 session's writes into one temporal chain; a write without it joins
 no chain.
 
-Categories: `preference` · `decision` · `fact` · `insight` · `context` · `general`.
+Categories: `preference` · `decision` · `fact` · `insight` · `context`.
 
-Importance is 2 (passing mention) to 5 (architectural / strong preference). The extraction worker silently floors importance at 2 — `--imp 1` becomes `--imp 2`.
+`--imp` is a sort key for listings and tie-breaks (1-5, default 3),
+stored as passed. Pass 5 for a fact the whole system rests on.
 
 A write is not guaranteed to land. The worker drops content its
 extractor judges trivial, folds a fact that merely restates a stored
 insight into that insight, and supersedes a stored insight the new text
-contradicts (the old row keeps its content behind `superseded_by`
-and leaves recall). All three complete as `done`, so the queue reports
-success either way. When nothing at all was stored, the write is filed
-in the skipped ledger: read it back with `memman scheduler queue
+contradicts (the old row keeps its content behind `superseded_by` and
+leaves recall). A fact that contradicts several stored insights
+supersedes each of them. All three complete as `done`, so the queue
+reports success either way. When nothing at all was stored, the write is
+filed in the skipped ledger: read it back with `memman scheduler queue
 skipped`, which keeps the full content and the reason. A write that
 stored even one fact is not filed, so a single folded fact in a
-multi-fact write leaves no ledger row. To store text verbatim and
-bypass all three, pass `--no-reconcile`.
+multi-fact write leaves no ledger row. To store text verbatim and bypass
+all three, pass `--no-reconcile`.
 
 Correct an existing insight by ID:
 
@@ -196,3 +200,7 @@ memman log list [--since 7d]          # operation audit log
 - Never write to the global store — it is mounted read-only.
 - Max 8,000 characters per insight.
 - One self-contained fact per `remember` call.
+- `--source agent` for the agent's own conclusion, a locator (URL,
+  script, dataset pull) for imported material; `user`, the default, is
+  for the user's words. Recall's `--source` filter is an exact match on
+  that string.

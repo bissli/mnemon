@@ -32,20 +32,22 @@ no chain.
 memman remember "<fact>" --cat <category> --imp <1-5> --entities "e1,e2" --source agent --session $SESSION_ID
 ```
 
-Categories: `preference` · `decision` · `fact` · `insight` · `context` · `general`.
-Importance is 2 (passing mention) to 5 (architectural / strong preference). The extraction worker silently floors importance at 2 — `--imp 1` becomes `--imp 2`.
+Categories: `preference` · `decision` · `fact` · `insight` · `context`.
+`--imp` is a sort key for listings and tie-breaks (1-5, default 3),
+stored as passed. Pass 5 for a fact the whole system rests on.
 
 A write is not guaranteed to land. The worker drops content its
 extractor judges trivial, folds a fact that merely restates a stored
 insight into that insight, and supersedes a stored insight the new text
-contradicts (the old row keeps its content behind `superseded_by`
-and leaves recall). All three complete as `done`, so the queue reports
-success either way. When nothing at all was stored, the write is filed
-in the skipped ledger: read it back with `memman scheduler queue
+contradicts (the old row keeps its content behind `superseded_by` and
+leaves recall). A fact that contradicts several stored insights
+supersedes each of them. All three complete as `done`, so the queue
+reports success either way. When nothing at all was stored, the write is
+filed in the skipped ledger: read it back with `memman scheduler queue
 skipped`, which keeps the full content and the reason. A write that
 stored even one fact is not filed, so a single folded fact in a
-multi-fact write leaves no ledger row. To store text verbatim and
-bypass all three, pass `--no-reconcile`.
+multi-fact write leaves no ledger row. To store text verbatim and bypass
+all three, pass `--no-reconcile`.
 
 To correct a stored insight by ID without losing its `access_count` and
 edges (`corroboration_count` — the count of restatements, whether
@@ -81,7 +83,7 @@ memman recall "<query>" --brief --limit 20 --session <id>
 ```
 
 Add `--intent WHY|WHEN|ENTITY` to bias the ranking when intent is
-unambiguous. Add `--cat` or `--source` to filter.
+unambiguous. Add `--cat` or `--source` to filter (`--source` is an exact match).
 
 Recall returns rows even when nothing matches: a recency channel
 seeds the newest insights as anchors regardless. An empty `results`
@@ -192,3 +194,7 @@ memman log list [--since 7d --stats]  # operation audit log
 - Never store secrets, passwords, or tokens.
 - Max 8,000 characters per insight; chunk longer content.
 - One self-contained fact per `remember` call.
+- `--source agent` for the agent's own conclusion, a locator (URL,
+  script, dataset pull) for imported material; `user`, the default, is
+  for the user's words. Recall's `--source` filter is an exact match on
+  that string.
