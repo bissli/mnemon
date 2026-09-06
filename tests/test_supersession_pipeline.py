@@ -50,10 +50,9 @@ def test_two_facts_on_one_predecessor_supersede_once_and_add_once(
              'importance': 3, 'entities': []},
             ]
 
-    def _aim_at_old(llm_client, facts, existing):
-        return [{'fact': f['text'], 'action': 'SUPERSEDE',
-                 'target_id': 'old-1', 'merged_text': None}
-                for f in facts]
+    def _aim_at_old(llm_client, fact, existing):
+        return {'action': 'SUPERSEDE', 'targets': [('old-1', 'supersede')],
+                'merged_text': None}
 
     monkeypatch.setattr('memman.llm.extract.extract_facts', _two_facts)
     monkeypatch.setattr(
@@ -67,6 +66,7 @@ def test_two_facts_on_one_predecessor_supersede_once_and_add_once(
     assert actions == ['supersede', 'add']
     assert 'skipped' not in actions
     assert 'target_id' not in res['facts'][1]
+    assert 'replaced_ids' not in res['facts'][1]
     old = tmp_backend.nodes.get_include_deleted('old-1')
     assert old.superseded_by == res['facts'][0]['id']
     stored = {i.content for i in tmp_backend.nodes.get_all_active()}
@@ -81,14 +81,14 @@ def test_two_facts_on_one_predecessor_supersede_once_and_add_once(
 def test_degraded_replace_names_the_target_and_its_successor(tmp_backend):
     """Verify a replace whose target is already superseded says so.
 
-    Mutation: reporting the degraded add with neither `target_id` nor
-        `target_superseded_by`, so the caller cannot find the row that
-        now holds the topic; or inheriting entities and counts from a
-        row the add did not supersede.
+    Mutation: reporting the degraded add with no `targets_gone`, so the
+        caller cannot find the row that now holds the topic; or
+        inheriting entities and counts from a row the add did not
+        supersede.
     Oracle: the result dict for a superseded target (successor named)
-        and for a forgotten target (`target_superseded_by` None), with
-        no `replaced_id` on either, and the inserted row carrying only
-        its own entities.
+        and for a forgotten target (`superseded_by` None), with no
+        `replaced_ids` on either, and the inserted row carrying only its
+        own entities.
     """
     tmp_backend.nodes.insert(make_insight(
         id='old-1', content='first', entities=['inherited'],
@@ -103,15 +103,14 @@ def test_degraded_replace_names_the_target_and_its_successor(tmp_backend):
             action='replace', fact_text='third',
             fact_insight=make_insight(
                 id=new_id, content='third', entities=['own']),
-            target_id=target_id, embed_vec=None, enrichment={},
+            targets=[(target_id, 'replace')], embed_vec=None, enrichment={},
             causal_edges=[])
 
     late = _apply_plan(tmp_backend, _replace('late-1', 'old-1'),
                        embed_cache={}, store_name='test')
     assert late['action'] == 'add'
-    assert late['target_id'] == 'old-1'
-    assert late['target_superseded_by'] == 'new-1'
-    assert 'replaced_id' not in late
+    assert late['targets_gone'] == [{'id': 'old-1', 'superseded_by': 'new-1'}]
+    assert 'replaced_ids' not in late
     stored = tmp_backend.nodes.get('late-1')
     assert stored.entities == ['own']
     assert stored.access_count == 0
@@ -120,8 +119,7 @@ def test_degraded_replace_names_the_target_and_its_successor(tmp_backend):
     forgotten = _apply_plan(tmp_backend, _replace('late-2', 'gone-1'),
                             embed_cache={}, store_name='test')
     assert forgotten['action'] == 'add'
-    assert forgotten['target_id'] == 'gone-1'
-    assert forgotten['target_superseded_by'] is None
+    assert forgotten['targets_gone'] == [{'id': 'gone-1', 'superseded_by': None}]
 
 
 @pytest.mark.no_auto_drain
@@ -201,16 +199,11 @@ def test_sibling_causal_edge_into_a_superseded_row_is_swept(
              'importance': 3, 'entities': []},
             ]
 
-    def _first_supersedes(llm_client, facts, existing):
-        out = []
-        for f in facts:
-            if 'redis' in f['text']:
-                out.append({'fact': f['text'], 'action': 'SUPERSEDE',
-                            'target_id': 'old-1', 'merged_text': None})
-            else:
-                out.append({'fact': f['text'], 'action': 'ADD',
-                            'target_id': None, 'merged_text': None})
-        return out
+    def _first_supersedes(llm_client, fact, existing):
+        if 'redis' in fact['text']:
+            return {'action': 'SUPERSEDE', 'targets': [('old-1', 'supersede')],
+                    'merged_text': None}
+        return {'action': 'ADD', 'targets': [], 'merged_text': None}
 
     def _causal_into_old(ro, insight, client):
         return [Edge(source_id=insight.id, target_id='old-1',
@@ -250,7 +243,7 @@ def test_degraded_replace_leaves_no_edge_into_its_dead_target(
     plan = FactPlan(
         action='replace', fact_text='third',
         fact_insight=make_insight(id='late-1', content='third'),
-        target_id='old-1', embed_vec=None, enrichment={},
+        targets=[('old-1', 'replace')], embed_vec=None, enrichment={},
         causal_edges=[Edge(source_id='late-1', target_id='old-1',
                            edge_type='causal', weight=0.9)])
 
@@ -262,24 +255,115 @@ def test_degraded_replace_leaves_no_edge_into_its_dead_target(
 
 def test_a_plain_add_plan_with_a_target_reports_no_replaced_id(
         tmp_db, tmp_backend):
-    """Verify `replaced_id` is reported only when a supersession happened.
+    """Verify `replaced_ids` is reported only when a supersession happened.
 
-    Mutation: emitting `replaced_id` whenever the plan carries a
-        `target_id`, so an `add` plan decorated with a target claims a
-        replace that never ran.
+    Mutation: emitting `replaced_ids` whenever the plan carries targets,
+        so an `add` plan decorated with a target claims a replace that
+        never ran.
     Oracle: the result of an `add` plan carrying a target: no
-        `replaced_id`, and the target still current.
+        `replaced_ids`, and the target still current.
     """
     tmp_backend.nodes.insert(make_insight(id='old-1', content='first'))
     plan = FactPlan(
         action='add', fact_text='second',
         fact_insight=make_insight(id='new-1', content='second'),
-        target_id='old-1', embed_vec=None, enrichment={}, causal_edges=[])
+        targets=[('old-1', 'replace')], embed_vec=None, enrichment={},
+        causal_edges=[])
 
     result = _apply_plan(tmp_backend, plan, embed_cache={}, store_name='test')
 
-    assert 'replaced_id' not in result
+    assert 'replaced_ids' not in result
     assert tmp_backend.nodes.get('old-1') is not None
+
+
+def test_one_fact_supersedes_every_contradicted_row(tmp_backend, monkeypatch):
+    """Verify a fact that contradicts two rows supersedes both in one write.
+
+    Mutation: acting on the first target only (the `recon[0]` contract),
+        which leaves the second contradicted row current beside the fact.
+    Oracle: both predecessors read back with `superseded_by` naming the
+        one successor, two `reconcile-supersede` oplog rows, `replaced_ids`
+        listing both, and the far endpoint of each predecessor's edge on
+        the successor.
+    """
+    from memman.store.model import Edge
+
+    for old, far in (('old-1', 'ctx-1'), ('old-2', 'ctx-2')):
+        tmp_backend.nodes.insert(make_insight(
+            id=old, content=f'the broker at {old} is kombu and X holds'))
+        tmp_backend.nodes.insert(make_insight(id=far, content=f'{far} context'))
+        tmp_backend.edges.upsert(Edge(source_id=far, target_id=old,
+                                      edge_type='causal', weight=0.8))
+
+    def _one_fact(llm_client, content):
+        return [{'text': content, 'category': 'fact', 'entities': []}]
+
+    def _two_targets(llm_client, fact, existing):
+        return {'action': 'SUPERSEDE',
+                'targets': [('old-1', 'supersede'), ('old-2', 'supersede')],
+                'merged_text': 'X is no longer so; Y holds'}
+
+    monkeypatch.setattr('memman.llm.extract.extract_facts', _one_fact)
+    monkeypatch.setattr('memman.llm.extract.reconcile_memories', _two_targets)
+
+    res = run_remember(
+        tmp_backend, _parent('the broker is redis and X no longer holds'),
+        'the broker is redis and X no longer holds',
+        ec=bound_embedder(tmp_backend), store_name='test')
+
+    fact = res['facts'][0]
+    assert fact['action'] == 'supersede'
+    assert fact['replaced_ids'] == ['old-1', 'old-2']
+    for old in ('old-1', 'old-2'):
+        assert tmp_backend.nodes.get_include_deleted(old).superseded_by == fact['id']
+        assert tmp_backend.edges.by_node(old) == []
+    ops = [(e.operation, e.insight_id) for e in tmp_backend.oplog.recent(limit=20)]
+    assert ops.count(('reconcile-supersede', 'old-1')) == 1
+    assert ops.count(('reconcile-supersede', 'old-2')) == 1
+    causal_far = {e.source_id for e in tmp_backend.edges.by_node(fact['id'])
+                  if e.edge_type == 'causal'}
+    assert causal_far == {'ctx-1', 'ctx-2'}
+
+
+def test_batch_drops_only_the_taken_target(tmp_backend, monkeypatch):
+    """Verify a later fact keeps its free targets when one is already taken.
+
+    Mutation: degrading the whole plan to ADD when any target is taken
+        in the batch, which leaves the free contradicted row current.
+    Oracle: the free row's `superseded_by` naming the second successor,
+        and the second fact's action `supersede` with `replaced_ids`
+        listing the free row alone.
+    """
+    tmp_backend.nodes.insert(make_insight(id='old-1', content='the broker is kombu'))
+    tmp_backend.nodes.insert(make_insight(id='old-2', content='the queue is durable'))
+
+    def _two_facts(llm_client, content):
+        return [
+            {'text': 'the broker is redis now', 'category': 'fact', 'entities': []},
+            {'text': 'nothing is durable and the broker is redis', 'category': 'fact',
+             'entities': []},
+            ]
+
+    def _aim(llm_client, fact, existing):
+        if fact['text'].startswith('nothing'):
+            return {'action': 'SUPERSEDE',
+                    'targets': [('old-1', 'supersede'), ('old-2', 'supersede')],
+                    'merged_text': None}
+        return {'action': 'SUPERSEDE', 'targets': [('old-1', 'supersede')],
+                'merged_text': None}
+
+    monkeypatch.setattr('memman.llm.extract.extract_facts', _two_facts)
+    monkeypatch.setattr('memman.llm.extract.reconcile_memories', _aim)
+
+    res = run_remember(
+        tmp_backend, _parent('the broker changed'), 'the broker changed',
+        ec=bound_embedder(tmp_backend), store_name='test')
+
+    first, second = res['facts']
+    assert (first['action'], first['replaced_ids']) == ('supersede', ['old-1'])
+    assert (second['action'], second['replaced_ids']) == ('supersede', ['old-2'])
+    assert tmp_backend.nodes.get_include_deleted('old-1').superseded_by == first['id']
+    assert tmp_backend.nodes.get_include_deleted('old-2').superseded_by == second['id']
 
 
 @pytest.mark.no_auto_drain

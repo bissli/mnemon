@@ -26,7 +26,7 @@ def _make_plan(new_id, target_id, causal_edges):
         action='replace',
         fact_text='replacement content',
         fact_insight=new_insight,
-        target_id=target_id,
+        targets=[(target_id, 'replace')],
         embed_vec=None,
         enrichment={},
         causal_edges=causal_edges,

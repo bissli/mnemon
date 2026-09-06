@@ -119,7 +119,7 @@ PG_BASELINE_SCHEMA = """
 create table if not exists {schema}.insights (
     id          text primary key,
     content     text not null,
-    category    text default 'general',
+    category    text default 'fact',
     importance  integer default 3,
     entities    jsonb default '[]'::jsonb,
     source      text default 'user',
@@ -357,7 +357,7 @@ def _row_to_insight(row: tuple[Any, ...]) -> Insight:
     i = Insight()
     i.id = row[0]
     i.content = row[1]
-    i.category = row[2] or 'general'
+    i.category = row[2] or 'fact'
     i.importance = row[3] if row[3] is not None else 3
     ents = row[4]
     if isinstance(ents, list):

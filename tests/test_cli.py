@@ -60,6 +60,18 @@ class TestRemember:
             'remember', 'Go uses SQLite for storage', '--cat', 'bogus'])
         assert result.exit_code != 0
 
+    def test_remember_rejects_general(self, runner):
+        """Verify `--cat general` exits non-zero and names the valid set.
+
+        Mutation: `general` accepted as a category (the 0.33.x set).
+        Oracle: the exit code and the message listing the valid categories.
+        """
+        result = invoke(runner, [
+            'remember', 'Go uses SQLite for storage', '--cat', 'general'])
+        assert result.exit_code != 0
+        assert 'valid:' in result.output
+        assert 'fact' in result.output
+
     def test_remember_invalid_importance(self, runner):
         """Importance outside 1-5 is rejected."""
         result = invoke(runner, [
@@ -1956,12 +1968,11 @@ class TestIntraBatchDedup:
                     },
                 ]
 
-        def _force_update(llm_client, facts, existing):
-            target_id = existing[0][0] if existing else None
-            return [{'fact': f['text'], 'action': 'UPDATE',
-                     'target_id': target_id,
-                     'merged_text': f['text']}
-                    for f in facts]
+        def _force_update(llm_client, fact, existing):
+            if not existing:
+                return {'action': 'ADD', 'targets': [], 'merged_text': None}
+            return {'action': 'UPDATE', 'targets': [(existing[0][0], 'update')],
+                    'merged_text': fact['text']}
 
         with patch('memman.llm.extract.extract_facts', _two_facts), \
         patch('memman.llm.extract.reconcile_memories',
@@ -2044,12 +2055,11 @@ class TestIntraBatchDedup:
                     },
                 ]
 
-        def _force_update(llm_client, facts, existing):
-            target_id = existing[0][0] if existing else None
-            return [{'fact': f['text'], 'action': 'UPDATE',
-                     'target_id': target_id,
-                     'merged_text': f['text']}
-                    for f in facts]
+        def _force_update(llm_client, fact, existing):
+            if not existing:
+                return {'action': 'ADD', 'targets': [], 'merged_text': None}
+            return {'action': 'UPDATE', 'targets': [(existing[0][0], 'update')],
+                    'merged_text': fact['text']}
 
         fixed_vec = [1.0] + [0.0] * 511
 

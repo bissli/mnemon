@@ -396,9 +396,7 @@ def _mock_llm_complete(self: object, system: str, user: str,
     Accepts and ignores keyword args (e.g. `temperature`) so callers
     that pass them for reproducibility don't break the mock.
     """
-    if 'Extract atomic facts' in system:
-        return _mock_fact_extraction(user)
-    if 'Compare new facts' in system:
+    if 'ADD|UPDATE|SUPERSEDE|NONE' in system:
         return _mock_reconciliation(user)
     if 'Expand a search query' in system:
         return _mock_query_expansion(user)
@@ -407,39 +405,18 @@ def _mock_llm_complete(self: object, system: str, user: str,
     if 'causal' in system.lower():
         return _mock_causal(user)
     return json.dumps({'facts': [{'text': user, 'category': 'fact',
-                                  'importance': 3, 'entities': []}]})
-
-
-def _mock_fact_extraction(content: str) -> str:
-    """Generate realistic fact extraction response.
-
-    Extracts entities by finding capitalized words. Preserves
-    content as-is in a single fact — mimics Haiku behavior for
-    substantive content.
-    """
-    entities = _extract_mock_entities(content)
-    category = _infer_category(content)
-    importance = _infer_importance(content)
-    return json.dumps({
-        'facts': [{
-            'text': content,
-            'category': category,
-            'importance': importance,
-            'entities': entities,
-            }],
-        'skip_reason': None,
-        })
+                                  'entities': []}]})
 
 
 def _mock_reconciliation(prompt: str) -> str:
-    """Generate realistic reconciliation response.
+    """Generate a reconciliation response in the one-fact contract.
 
-    Parses the structured prompt to find existing memories and new
-    facts. If a new fact is very similar to an existing memory,
-    returns UPDATE; otherwise ADD.
+    Parses the structured prompt for the existing memories and the one
+    new fact. Word overlap with the closest memory decides: UPDATE over
+    0.6, NONE over 0.4, else ADD. One entry, top-level `merged_text`.
     """
     existing = {}
-    new_facts = []
+    fact_lines = []
     in_existing = False
     in_new = False
     for line in prompt.split('\n'):
@@ -447,7 +424,7 @@ def _mock_reconciliation(prompt: str) -> str:
             in_existing = True
             in_new = False
             continue
-        if line.startswith('NEW FACTS:'):
+        if line.startswith('NEW FACT:'):
             in_new = True
             in_existing = False
             continue
@@ -455,48 +432,38 @@ def _mock_reconciliation(prompt: str) -> str:
             m = re.match(r'\[(\d+)\]\s+(.*)', line)
             if m:
                 existing[m.group(1)] = m.group(2)
-        if in_new and line.startswith('- '):
-            new_facts.append(line[2:])
+        if in_new and line.strip():
+            fact_lines.append(line.strip())
 
-    actions = []
-    for fact in new_facts:
-        fact_lower = fact.lower()
-        best_id = None
-        best_overlap = 0
-        for eid, econtent in existing.items():
-            words_f = set(fact_lower.split())
-            words_e = set(econtent.lower().split())
-            overlap = len(words_f & words_e) / max(len(words_f | words_e), 1)
-            if overlap > best_overlap:
-                best_overlap = overlap
-                best_id = eid
+    fact = ' '.join(fact_lines)
+    fact_lower = fact.lower()
+    best_id = None
+    best_overlap = 0
+    for eid, econtent in existing.items():
+        words_f = set(fact_lower.split())
+        words_e = set(econtent.lower().split())
+        overlap = len(words_f & words_e) / max(len(words_f | words_e), 1)
+        if overlap > best_overlap:
+            best_overlap = overlap
+            best_id = eid
 
-        if best_overlap > 0.6:
-            actions.append({
-                'fact': fact,
-                'action': 'UPDATE',
-                'target_id': best_id,
-                'merged_text': fact,
-                'reason': 'similar content, updating',
-                })
-        elif best_overlap > 0.4:
-            actions.append({
-                'fact': fact,
-                'action': 'NONE',
-                'target_id': best_id,
-                'merged_text': None,
-                'reason': 'already captured',
-                })
-        else:
-            actions.append({
-                'fact': fact,
-                'action': 'ADD',
-                'target_id': None,
-                'merged_text': None,
-                'reason': 'new information',
-                })
-
-    return json.dumps({'actions': actions})
+    if best_overlap > 0.6:
+        return json.dumps({
+            'merged_text': fact,
+            'actions': [{'action': 'UPDATE', 'target_id': best_id,
+                         'reason': 'similar content, updating'}],
+            })
+    if best_overlap > 0.4:
+        return json.dumps({
+            'merged_text': None,
+            'actions': [{'action': 'NONE', 'target_id': best_id,
+                         'reason': 'already captured'}],
+            })
+    return json.dumps({
+        'merged_text': None,
+        'actions': [{'action': 'ADD', 'target_id': None,
+                     'reason': 'new information'}],
+        })
 
 
 def _mock_query_expansion(query: str) -> str:
@@ -539,27 +506,6 @@ def _extract_mock_entities(text: str) -> list[str]:
         if word not in stopwords and word not in entities:
             entities.append(word)
     return entities[:5]
-
-
-def _infer_category(text: str) -> str:
-    """Infer category from content keywords."""
-    lower = text.lower()
-    if any(w in lower for w in ['chose', 'decided', 'picked', 'switched',
-                                'migrated', 'prefer']):
-        return 'decision'
-    if any(w in lower for w in ['like', 'prefer', 'always', 'never',
-                                'love', 'hate']):
-        return 'preference'
-    return 'fact'
-
-
-def _infer_importance(text: str) -> int:
-    """Infer importance from content keywords."""
-    lower = text.lower()
-    if any(w in lower for w in ['critical', 'outage', 'production',
-                                'architecture']):
-        return 4
-    return 3
 
 
 def _mock_embed_batch(

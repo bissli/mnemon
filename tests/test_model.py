@@ -20,10 +20,14 @@ def test_parse_entities_null():
 
 
 def test_valid_categories():
-    """All 6 categories accepted, invalid rejected."""
-    for cat in ('preference', 'decision', 'fact',
-                'insight', 'context', 'general'):
-        assert cat in VALID_CATEGORIES
+    """The five categories are accepted; `general` and unknowns are not.
+
+    Mutation: the `general` literal returning to `VALID_CATEGORIES`.
+    Oracle: the five-member set, with `general` and `bogus` outside it.
+    """
+    assert VALID_CATEGORIES == {'preference', 'decision', 'fact',
+                                'insight', 'context'}
+    assert 'general' not in VALID_CATEGORIES
     assert 'bogus' not in VALID_CATEGORIES
 
 
@@ -61,9 +65,12 @@ def test_semantic_default_values():
 
     These four are real downstream-consumer contracts: changing any
     of them silently shifts graph behavior or LLM-output fallbacks.
+
+    Mutation: the `general` literal returning as the `Insight` default.
+    Oracle: the dataclass defaults.
     """
     ins = Insight()
-    assert ins.category == 'general'
+    assert ins.category == 'fact'
     assert ins.importance == 3
     e = Edge()
     assert e.edge_type == 'semantic'

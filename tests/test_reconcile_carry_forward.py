@@ -28,7 +28,7 @@ def _merge_plan(new_id, target_id, *, action='update', fact_text=None,
         action=action,
         fact_text=fact_text or 'merged content',
         fact_insight=make_insight(**overrides),
-        target_id=target_id,
+        targets=[(target_id, action)],
         embed_vec=None,
         enrichment={},
         causal_edges=[],
@@ -166,7 +166,7 @@ def test_supersede_plan_links_the_predecessor_and_keeps_it(tmp_db, tmp_backend):
     assert get_insight_by_id(tmp_db, 'new-1').content == (
         'the broker is redis now (was kombu)')
     assert result['action'] == 'supersede'
-    assert result['replaced_id'] == 'old-1'
+    assert result['replaced_ids'] == ['old-1']
     ops = {(e.operation, e.insight_id, e.detail)
            for e in tmp_backend.oplog.recent(limit=10)}
     assert ('reconcile-supersede', 'old-1', 'replaced by new-1') in ops
@@ -196,6 +196,62 @@ def test_supersede_does_not_carry_corroboration_but_update_does(
     assert get_insight_by_id(tmp_db, 'new-s').corroboration_count == 0
 
 
+def test_one_gone_target_does_not_degrade_the_other(tmp_db, tmp_backend):
+    """Verify one forgotten target leaves the other target linked.
+
+    Mutation: any gone target degrading the whole plan to add, so the
+        current contradicted row stays live beside the successor.
+    Oracle: the current target read back with `superseded_by` naming
+        the successor, `replaced_ids` naming it alone, `targets_gone`
+        naming the forgotten one, and the action still `supersede`.
+    """
+    insert_insight(tmp_db, make_insight(id='old-1', content='current claim'))
+    insert_insight(tmp_db, make_insight(id='gone-1', content='forgotten claim'))
+    assert tmp_backend.nodes.soft_delete('gone-1') is True
+
+    plan = FactPlan(
+        action='supersede', fact_text='both are wrong',
+        fact_insight=make_insight(id='new-1', content='both are wrong'),
+        targets=[('gone-1', 'supersede'), ('old-1', 'supersede')],
+        embed_vec=None, enrichment={}, causal_edges=[])
+    result = _apply_plan(tmp_backend, plan, embed_cache={}, store_name='test')
+
+    assert result['action'] == 'supersede'
+    assert result['replaced_ids'] == ['old-1']
+    assert result['targets_gone'] == [{'id': 'gone-1', 'superseded_by': None}]
+    assert tmp_backend.nodes.get_include_deleted('old-1').superseded_by == 'new-1'
+
+
+def test_mixed_update_and_supersede_targets_log_their_own_operation(
+        tmp_db, tmp_backend):
+    """Verify each target's oplog row and carry follow its own relation.
+
+    Mutation: one op name for every target, or carrying corroboration
+        from the superseded row too.
+    Oracle: `reconcile-update` on the update target and
+        `reconcile-supersede` on the supersede target, and the
+        successor's corroboration count equal to the update target's 4
+        rather than the supersede target's 9.
+    """
+    insert_insight(tmp_db, make_insight(
+        id='old-u', content='refined later', corroboration_count=4))
+    insert_insight(tmp_db, make_insight(
+        id='old-s', content='contradicted later', corroboration_count=9))
+
+    plan = FactPlan(
+        action='supersede', fact_text='refined and corrected',
+        fact_insight=make_insight(id='new-1', content='refined and corrected'),
+        targets=[('old-s', 'supersede'), ('old-u', 'update')],
+        embed_vec=None, enrichment={}, causal_edges=[])
+    result = _apply_plan(tmp_backend, plan, embed_cache={}, store_name='test')
+
+    ops = {(e.operation, e.insight_id) for e in tmp_backend.oplog.recent(limit=10)}
+    assert ('reconcile-update', 'old-u') in ops
+    assert ('reconcile-supersede', 'old-s') in ops
+    assert get_insight_by_id(tmp_db, 'new-1').corroboration_count == 4
+    assert result['replaced_ids'] == ['old-s', 'old-u']
+
+
 def test_unmerged_supersede_is_marked_in_the_oplog(tmp_db, tmp_backend):
     """Verify a SUPERSEDE that stored the bare fact is marked as unmerged.
 
@@ -222,3 +278,34 @@ def test_unmerged_supersede_is_marked_in_the_oplog(tmp_db, tmp_backend):
                if e.operation == 'reconcile-supersede'}
     assert details['old-a'] == 'replaced by new-a (unmerged)'
     assert details['old-b'] == 'replaced by new-b'
+
+
+def test_degraded_skip_still_builds_its_semantic_edges(tmp_db, tmp_backend):
+    """Verify a skip that degrades to an add gets semantic edges like any add.
+
+    The planning loop registers a vector in the drain cache for
+    non-skipped plans only, and the repair for a degraded skip runs after
+    the apply, so the edge builder saw no vector for the new row.
+
+    Mutation: leaving the degraded add's vector out of `embed_cache`
+        until after `_apply_plan` returns, which yields zero semantic
+        edges for that row alone.
+    Oracle: a semantic edge between the degraded add and a stored row
+        carrying the identical vector, read back off the store.
+    """
+    insert_insight(tmp_db, make_insight(id='near-1', content='a near neighbor'))
+    insert_insight(tmp_db, make_insight(id='gone-1', content='the exact twin'))
+    assert tmp_backend.nodes.soft_delete('gone-1') is True
+    vec = [1.0, 0.0, 0.0]
+    embed_cache = {'near-1': list(vec)}
+
+    plan = FactPlan(
+        action='skipped', fact_text='the exact twin',
+        fact_insight=make_insight(id='new-1', content='the exact twin'),
+        targets=[('gone-1', 'none')], embed_vec=list(vec),
+        skip_reason='exact duplicate')
+    result = _apply_plan(tmp_backend, plan, embed_cache=embed_cache, store_name='test')
+
+    assert result['action'] == 'add'
+    semantic = [e for e in get_edges_by_node(tmp_db, 'new-1') if e.edge_type == 'semantic']
+    assert {e.source_id for e in semantic} | {e.target_id for e in semantic} >= {'new-1', 'near-1'}

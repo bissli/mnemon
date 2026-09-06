@@ -43,11 +43,10 @@ def _stub_none(monkeypatch, target_id):
     """
     calls = []
 
-    def _fake(llm_client, facts, similar):
-        calls.append((facts, similar))
-        return [{'fact': f['text'], 'action': 'NONE',
-                 'target_id': target_id, 'merged_text': None}
-                for f in facts]
+    def _fake(llm_client, fact, similar):
+        calls.append((fact, similar))
+        return {'action': 'NONE', 'targets': [(target_id, 'none')],
+                'merged_text': None}
 
     monkeypatch.setattr('memman.llm.extract.reconcile_memories', _fake)
     return calls

@@ -90,56 +90,6 @@ class TestCategoryAccuracy:
         assert facts[0]['category'] == 'fact'
 
 
-class TestImportanceCalibration:
-    """Prompt produces calibrated importance scores."""
-
-    def test_formula_importance_3(self, llm_client):
-        """Formula gets importance 3 (working knowledge)."""
-        facts = extract_facts(
-            llm_client,
-            'Delta PnL = delta * spot_change * contract_size')
-        assert len(facts) >= 1
-        assert facts[0]['importance'] == 3
-
-    def test_decision_importance_4(self, llm_client):
-        """Explicit decision with rationale gets importance 4."""
-        facts = extract_facts(
-            llm_client,
-            'Chose Click over Typer for the CLI framework because '
-            'Click has better support for nested command groups')
-        assert len(facts) >= 1
-        imp_values = [f['importance'] for f in facts]
-        assert 4 in imp_values
-
-    def test_minor_detail_importance_2_or_3(self, llm_client):
-        """Minor detail gets importance 2 or 3."""
-        facts = extract_facts(
-            llm_client,
-            'The default timeout is 30 seconds')
-        assert len(facts) >= 1
-        assert facts[0]['importance'] in {2, 3}
-
-    def test_architectural_invariant_importance_5(self, llm_client):
-        """Core architectural invariant gets importance 5."""
-        facts = extract_facts(
-            llm_client,
-            'All data must be stored in a single SQLite file with '
-            'no external dependencies -- this is a non-negotiable '
-            'architectural constraint that shapes every design decision')
-        assert len(facts) >= 1
-        imp_values = [f['importance'] for f in facts]
-        assert 5 in imp_values
-
-    def test_api_behavior_importance_3(self, llm_client):
-        """API behavior gets importance 3 (working knowledge)."""
-        facts = extract_facts(
-            llm_client,
-            'httpx.Client raises ConnectTimeout after 5 seconds '
-            'by default when the server does not respond')
-        assert len(facts) >= 1
-        assert facts[0]['importance'] == 3
-
-
 class TestSkipBehavior:
     """Prompt correctly skips trivial content."""
 

@@ -140,7 +140,7 @@ def _seed_row(data_dir: str, status: str = 'stale') -> int:
             " (store, content, hint_cat, hint_imp, hint_source,"
             "  hint_entities, status, queue_uuid, queued_at)"
             " values (?, ?, ?, ?, ?, ?, ?, ?, strftime('%s','now'))",
-            ('default', f'{status}-row', 'general', 3, 'test', '[]',
+            ('default', f'{status}-row', 'fact', 3, 'test', '[]',
              status, str(uuid.uuid4())))
         conn.commit()
         return cur.lastrowid

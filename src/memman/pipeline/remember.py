@@ -19,6 +19,7 @@ fact-loss gap for a single queue row.
 
 import functools
 import hashlib
+import json
 import logging
 import uuid
 from concurrent.futures import ThreadPoolExecutor
@@ -130,12 +131,31 @@ KEYWORD_HITS_LIMIT = 5
 @dataclass
 class FactPlan:
     """Planned write for one extracted fact.
+
+    Attributes
+    ----------
+    action : str
+        `add`, `update`, `supersede`, `replace` or `skipped`.
+    fact_text : str
+        The fact as extracted; the successor stores `merged_text`
+        instead when the reconciler supplied one.
+    fact_insight : Insight | None
+        The row the apply phase inserts; None only on a skip that
+        carries nothing to degrade into.
+    targets : list[tuple[str, str]]
+        `(insight_id, relation)` per affected row, relation in
+        `update | supersede | replace | none`. Several supersede
+        targets share one successor; at most one update target.
+    candidates : list[tuple[str, str, float]]
+        The reconcile shortlist as `(insight_id, rung, score)`, rung
+        `keyword` or `cosine`, logged by the apply phase for replay.
     """
 
     action: str
     fact_text: str
     fact_insight: Insight | None = None
-    target_id: str | None = None
+    targets: list[tuple[str, str]] = field(default_factory=list)
+    candidates: list[tuple[str, str, float]] = field(default_factory=list)
     embed_vec: list[float] | None = None
     enrichment: dict[str, Any] = field(default_factory=dict)
     causal_edges: list[Edge] = field(default_factory=list)
@@ -151,7 +171,6 @@ def run_remember(
         no_reconcile: bool = False,
         replaced_id: str = '',
         cat_explicit: bool = False,
-        imp_explicit: bool = False,
         embed_cache: dict[str, list[float]] | None = None,
         insights_by_id: dict[str, Insight] | None = None,
         executor: ThreadPoolExecutor | None = None,
@@ -191,7 +210,6 @@ def run_remember(
         facts = [{
             'text': content,
             'category': insight.category,
-            'importance': insight.importance,
             'entities': [],
             }]
     else:
@@ -229,7 +247,7 @@ def run_remember(
         for fact in facts:
             plan, calls = _plan_fact(
                 fact, insight, pending_replaced_id, no_reconcile,
-                cat_explicit, imp_explicit, insights_by_id,
+                cat_explicit, insights_by_id,
                 embed_cache, superseded_in_batch, llm_client,
                 metadata_llm_client, ec,
                 backend, executor)
@@ -241,11 +259,12 @@ def run_remember(
                 plan.fact_insight.model_id = llm_model_id
                 plan.fact_insight.embedding_model = embed_model
 
-            if plan.target_id and plan.action in {
+            if plan.targets and plan.action in {
                     'update', 'replace', 'supersede'}:
-                superseded_in_batch.add(plan.target_id)
-                insights_by_id.pop(plan.target_id, None)
-                embed_cache.pop(plan.target_id, None)
+                for target_id, _relation in plan.targets:
+                    superseded_in_batch.add(target_id)
+                    insights_by_id.pop(target_id, None)
+                    embed_cache.pop(target_id, None)
 
             if plan.fact_insight and plan.action != 'skipped':
                 insights_by_id[plan.fact_insight.id] = plan.fact_insight
@@ -274,9 +293,9 @@ def run_remember(
                     # the dead target and register the inserted
                     # copy, or every later row exact-matches the
                     # same stale entry and inserts another copy.
-                    if plan.target_id:
-                        insights_by_id.pop(plan.target_id, None)
-                        embed_cache.pop(plan.target_id, None)
+                    if plan.targets:
+                        insights_by_id.pop(plan.targets[0][0], None)
+                        embed_cache.pop(plan.targets[0][0], None)
                     insights_by_id[plan.fact_insight.id] = (
                         plan.fact_insight)
                     if plan.embed_vec is not None:
@@ -398,7 +417,6 @@ def _plan_fact(
         replaced_id: str,
         no_reconcile: bool,
         cat_explicit: bool,
-        imp_explicit: bool,
         insights_by_id: dict[str, Insight],
         embed_cache: dict[str, list[float]],
         superseded_in_batch: set[str],
@@ -418,8 +436,7 @@ def _plan_fact(
     fact_text = fact['text']
     fact_category = (parent.category if cat_explicit
                      else fact.get('category', parent.category))
-    fact_importance = (parent.importance if imp_explicit
-                       else fact.get('importance', parent.importance))
+    fact_importance = parent.importance
     fact_entities = fact.get('entities', [])
 
     fact_vec = None
@@ -432,12 +449,13 @@ def _plan_fact(
             f'fact embed failed; row stored without vector: {exc}')
 
     action = 'ADD'
-    target_id: str | None = None
+    targets: list[tuple[str, str]] = []
+    candidates: list[tuple[str, str, float]] = []
     merged_text: str | None = None
 
     if replaced_id:
         action = 'REPLACE'
-        target_id = replaced_id
+        targets = [(replaced_id, 'replace')]
     elif not no_reconcile:
         snapshot = list(insights_by_id.values())
         keyword_hits = keyword_search(
@@ -445,10 +463,11 @@ def _plan_fact(
         similar: list[tuple[str, str]] = []
         seen: set[str] = set()
 
-        for hit_ins, _score in keyword_hits:
+        for hit_ins, score in keyword_hits:
             if hit_ins.id in seen or hit_ins.id in superseded_in_batch:
                 continue
             similar.append((hit_ins.id, hit_ins.content))
+            candidates.append((hit_ins.id, 'keyword', float(score)))
             seen.add(hit_ins.id)
 
         if fact_vec is not None:
@@ -463,18 +482,19 @@ def _plan_fact(
                 if sim >= SIMILARITY_RECONCILE_THRESHOLD:
                     cosine_cands.append((sim, ins.id, ins.content))
             cosine_cands.sort(key=lambda c: c[0], reverse=True)
-            for _sim, cid, ccontent in cosine_cands:
+            for sim, cid, ccontent in cosine_cands:
                 if len(similar) >= MAX_SIMILAR_FOR_RECONCILE:
                     break
                 similar.append((cid, ccontent))
+                candidates.append((cid, 'cosine', float(sim)))
                 seen.add(cid)
 
         if similar:
             # Exact-match rung: byte-identical content (modulo case
-            # and whitespace) needs no LLM judgement when exactly ONE
+            # and whitespace) needs no LLM judgment when exactly ONE
             # stored row matches. Two identical stored rows mean the
             # store is already inconsistent, and which one to merge
-            # into is exactly the judgement worth an LLM call. Full
+            # into is exactly the judgment worth an LLM call. Full
             # normalized equality only -- `in` would swallow every
             # superset fact.
             normalized = _WS_COLLAPSE_RE.sub(
@@ -498,7 +518,8 @@ def _plan_fact(
                         updated_at=parent.updated_at,
                         session_id=parent.session_id,
                         queue_uuid=parent.queue_uuid),
-                    target_id=exact_ids[0],
+                    targets=[(exact_ids[0], 'none')],
+                    candidates=candidates,
                     # Carry the already-computed vector so a target
                     # soft-deleted between planning and apply can
                     # degrade to an embedded add at no extra cost.
@@ -506,23 +527,32 @@ def _plan_fact(
                     skip_reason='exact duplicate',
                     ), calls
             recon = llm_extract.reconcile_memories(
-                llm_client, [fact], similar)
+                llm_client, fact, similar)
             calls += 1
-            if recon:
-                r = recon[0]
-                action = r['action']
-                target_id = r.get('target_id')
-                merged_text = r.get('merged_text')
+            action = recon['action']
+            targets = list(recon['targets'])
+            merged_text = recon['merged_text']
 
-    if (action in {'UPDATE', 'REPLACE', 'SUPERSEDE'}
-            and target_id
-            and target_id in superseded_in_batch):
-        # An earlier fact in this write already took the target. A
-        # second pointer would fork the chain and a skip would drop
-        # the fact, so it lands as a plain add.
-        trace.event(
-            'batch_target_taken', target_id=target_id, action=action)
-        action, target_id, merged_text = 'ADD', None, None
+    if action in {'UPDATE', 'REPLACE', 'SUPERSEDE'} and targets:
+        # Notes:
+        # - An earlier fact in this write already took a target. A
+        #   second pointer would fork the chain and a skip would drop
+        #   the fact, so the taken target leaves the list.
+        # - When every target is taken the fact lands as a plain add
+        #   and the merged text goes with them: the degraded add must
+        #   store the fact, never clauses of a row it did not link.
+        # - A partial drop keeps the merged text: it was written for
+        #   the fact and every target, and the dropped row's clauses
+        #   already sit in the earlier successor of the same write.
+        taken = [t for t, _relation in targets if t in superseded_in_batch]
+        if taken:
+            targets = [(t, r) for t, r in targets if t not in superseded_in_batch]
+            for target_id in taken:
+                trace.event(
+                    'batch_target_taken', target_id=target_id,
+                    action=action, partial=bool(targets))
+            if not targets:
+                action, merged_text = 'ADD', None
 
     fact_id = str(uuid.uuid4())
     effective_text = merged_text or fact_text
@@ -560,7 +590,8 @@ def _plan_fact(
             action='skipped',
             fact_text=fact_text,
             fact_insight=fact_insight,
-            target_id=target_id,
+            targets=targets,
+            candidates=candidates,
             embed_vec=embed_vec,
             skip_reason='already captured',
             ), calls
@@ -596,7 +627,8 @@ def _plan_fact(
         action=action.lower(),
         fact_text=fact_text,
         fact_insight=fact_insight,
-        target_id=target_id,
+        targets=targets,
+        candidates=candidates,
         embed_vec=embed_vec,
         enrichment=enrichment,
         causal_edges=causal_edges,
@@ -664,44 +696,70 @@ def _apply_plan(
 
     Notes
     -----
-    - `update`, `replace` and `supersede` share one path: the target
-      is superseded (never deleted), its edges move to the successor,
-      and the successor inherits the entity union and recall history.
-      They differ only in the oplog operation name and in whether the
-      corroboration count carries, which `supersede` withholds.
+    - `update`, `replace` and `supersede` share one path, run once per
+      target: the target is superseded (never deleted), its edges move
+      to the successor, and the successor inherits the entity union
+      and recall history of every linked target. They differ only in
+      the oplog operation name and in whether the corroboration count
+      carries, which `supersede` withholds.
     - A target that is not current (forgotten, or superseded by an
-      earlier write) degrades the plan to a plain add whose result
-      names the target and its successor.
+      earlier write) is dropped into `targets_gone`; the plan degrades
+      to a plain add only when every target is gone.
+    - Every plan that carried a reconcile shortlist logs it first, as
+      a `reconcile-candidates` oplog row, so the decision can be
+      replayed against exactly the rows the model saw.
     """
+    fact_id = plan.fact_insight.id if plan.fact_insight is not None else None
+    skip_target = plan.targets[0][0] if plan.targets else None
+    if plan.candidates:
+        # Notes:
+        # - Keyed on the row that will exist: the NONE or exact-match
+        #   memory for a skip (no successor is inserted), the new row
+        #   otherwise, ADD included. `fact_id` in the detail ties a skip
+        #   that later degrades to an add back to the inserted row.
+        # - The oplog has no foreign key on `insight_id`, so a row
+        #   logged before `nodes.insert` cannot fail.
+        key = skip_target if plan.action == 'skipped' else fact_id
+        if key is not None:
+            backend.oplog.log(
+                operation='reconcile-candidates', insight_id=key,
+                detail=json.dumps({
+                    'fact_id': fact_id,
+                    'fact': plan.fact_text[:200],
+                    'candidates': [
+                        {'id': cid, 'rung': rung, 'score': round(score, 4)}
+                        for cid, rung, score in plan.candidates],
+                    }))
+
     corroborate_degraded = False
     if plan.action == 'skipped':
         skip_fi = plan.fact_insight
         # The exact-match rung and the reconciler's NONE verdict both
-        # set target_id; the dedup-sibling and target-deleted skips
+        # name a target; the dedup-sibling and target-deleted skips
         # carry none.
         corroborated = False
         already_counted = (
             corroborated_ids is not None
-            and plan.target_id in corroborated_ids)
-        if plan.target_id and not already_counted:
+            and skip_target in corroborated_ids)
+        if skip_target and not already_counted:
             corroborated = backend.nodes.increment_corroboration(
-                plan.target_id,
+                skip_target,
                 queue_uuid=skip_fi.queue_uuid if skip_fi else None)
             if corroborated:
                 if corroborated_ids is not None:
-                    corroborated_ids.add(plan.target_id)
+                    corroborated_ids.add(skip_target)
                 backend.oplog.log(
                     operation='reconcile-corroborate',
-                    insight_id=plan.target_id,
+                    insight_id=skip_target,
                     detail=f'restated by: {plan.fact_text[:200]}')
-        if not plan.target_id or already_counted or corroborated:
+        if not skip_target or already_counted or corroborated:
             return {
                 'id': skip_fi.id if skip_fi else str(uuid.uuid4()),
                 'content': (skip_fi.content if skip_fi
                             else plan.fact_text),
                 'action': 'skipped',
                 'reason': plan.skip_reason,
-                'target_id': plan.target_id,
+                'target_id': skip_target,
                 }
         # The exact-match target was soft-deleted between planning
         # and apply (an external forget); a skip here
@@ -710,77 +768,90 @@ def _apply_plan(
         # dead target counted so a duplicate fact in the same row
         # skips against the copy this add inserts.
         corroborate_degraded = True
-        if corroborated_ids is not None and plan.target_id:
-            corroborated_ids.add(plan.target_id)
+        if corroborated_ids is not None and skip_target:
+            corroborated_ids.add(skip_target)
         logger.warning(
-            f'corroborate target {plan.target_id} already deleted;'
+            f'corroborate target {skip_target} already deleted;'
             ' degrading to add')
 
     assert plan.fact_insight is not None, (
         'non-skipped FactPlan must carry a fact_insight')
     fi = plan.fact_insight
 
-    target_already_gone = False
-    target_superseded_by: str | None = None
-    carried_edges: list[Edge] = []
-    if plan.action in {'update', 'replace', 'supersede'} and plan.target_id:
-        op_name = {
-            'replace': 'replace',
-            'update': 'reconcile-update',
-            'supersede': 'reconcile-supersede',
-            }[plan.action]
-        before_target = backend.nodes.get_include_deleted(plan.target_id)
-        # Snapshot before the pointer is written: `supersede` removes
-        # the predecessor's edges, and a later snapshot would also
-        # scoop up the plan's causal edges and the successor's own
-        # freshly minted ones.
-        carried_edges = backend.edges.by_node(plan.target_id)
+    linking = plan.action in {'update', 'replace', 'supersede'} and bool(plan.targets)
+    linked_targets: list[tuple[str, str]] = []
+    targets_gone: list[dict[str, str | None]] = []
+    carried: list[tuple[str, list[Edge]]] = []
+    predecessors: list[tuple[str, str, Insight]] = []
+    if linking:
+        for target_id, relation in plan.targets:
+            before_target = backend.nodes.get_include_deleted(target_id)
+            # Snapshot before the pointer is written: `supersede` removes
+            # the predecessor's edges, and a later snapshot would also
+            # scoop up the plan's causal edges and the successor's own
+            # freshly minted ones.
+            carried_edges = backend.edges.by_node(target_id)
+            # The pointer is written BEFORE `nodes.insert`, and the
+            # position is load-bearing: `create_temporal_edge` reads
+            # `get_latest_by_session` and `get_recent_in_window`, so every
+            # predecessor must already be out of the active set or the
+            # successor chains its backbone to a row it replaced.
+            linked = backend.nodes.supersede(target_id, fi.id)
+            if not linked or before_target is None:
+                targets_gone.append({
+                    'id': target_id,
+                    'superseded_by': (before_target.superseded_by
+                                      if before_target is not None else None),
+                    })
+                logger.warning(
+                    f'{relation} target {target_id} is not current;'
+                    ' dropped from the plan')
+                continue
+            linked_targets.append((target_id, relation))
+            carried.append((target_id, carried_edges))
+            predecessors.append((target_id, relation, before_target))
         # Notes:
-        # - The pointer is written BEFORE `nodes.insert`, and the
-        #   position is load-bearing: `create_temporal_edge` reads
-        #   `get_latest_by_session` and `get_recent_in_window`, so the
-        #   predecessor must already be out of the active set or the
-        #   successor chains its backbone to the row it replaced.
-        # - The predecessor keeps its content behind `superseded_by`;
+        # - Every predecessor keeps its content behind `superseded_by`;
         #   what the successor copies is what the CURRENT view keeps.
         #   Entities union rather than overwrite because the extractor
         #   sees only the incoming text and would narrow the merged
-        #   row's entity set on every pass; recall history carries.
+        #   row's entity set on every pass; recall history carries as
+        #   the max over every linked target.
         # - Corroboration carries on a refinement, not on a
         #   contradiction: it counts restatements of the claim the
         #   supersede just falsified.
-        linked = backend.nodes.supersede(plan.target_id, fi.id)
-        if not linked or before_target is None:
-            target_already_gone = True
-            carried_edges = []
-            target_superseded_by = (
-                before_target.superseded_by
-                if before_target is not None else None)
-            logger.warning(
-                f'{plan.action} target {plan.target_id} is not current;'
-                ' degrading to add')
-        else:
+        for _target_id, relation, before_target in predecessors:
             fi.entities = list(dict.fromkeys(
                 list(fi.entities) + list(before_target.entities)))
             fi.access_count = max(
                 fi.access_count, before_target.access_count)
-            if plan.action != 'supersede':
+            if relation != 'supersede':
                 fi.corroboration_count = max(
                     fi.corroboration_count,
                     before_target.corroboration_count)
+        # One oplog row per linked target, each recording the finished
+        # successor rather than the partial union at its own turn.
+        for target_id, relation, before_target in predecessors:
+            op_name = {
+                'replace': 'replace',
+                'update': 'reconcile-update',
+                'supersede': 'reconcile-supersede',
+                }[relation]
             detail = f'replaced by {fi.id}'
-            if plan.action == 'supersede' and fi.content == plan.fact_text:
+            if relation == 'supersede' and fi.content == plan.fact_text:
                 # The model supplied no merged text, so the successor
                 # may have dropped clauses of the predecessor that are
                 # still true; the marker makes that rate measurable.
                 detail += ' (unmerged)'
-                trace.event(
-                    'supersede_unmerged', target_id=plan.target_id)
+                trace.event('supersede_unmerged', target_id=target_id)
             backend.oplog.log(
-                operation=op_name, insight_id=plan.target_id,
+                operation=op_name, insight_id=target_id,
                 detail=detail,
                 before=insight_to_delta_dict(before_target),
                 after=insight_to_delta_dict(fi))
+        if not linked_targets:
+            logger.warning(
+                f'{plan.action}: every target is gone; degrading to add')
 
     backend.nodes.insert(fi)
     stored = backend.nodes.get(fi.id)
@@ -790,6 +861,12 @@ def _apply_plan(
 
     final_vec = plan.enriched_vec or plan.embed_vec
     embedded = final_vec is not None
+    if corroborate_degraded and final_vec is not None:
+        # The planning loop registers a vector for non-skipped plans
+        # only and the caller's repair for a degraded skip runs after
+        # this returns, but the semantic-edge builder reads the new
+        # row's vector from the cache.
+        embed_cache[fi.id] = final_vec
     if final_vec is not None:
         backend.nodes.update_embedding(
             fi.id, final_vec, fi.embedding_model or '')
@@ -810,14 +887,15 @@ def _apply_plan(
     for edge in plan.causal_edges:
         backend.edges.upsert(edge)
 
-    if plan.action in {'update', 'replace', 'supersede'} and plan.target_id:
-        if not target_already_gone:
-            move_edges(backend, plan.target_id, fi.id, carried_edges)
-        # Sweeps the causal edges the plan itself aimed at the target,
+    if linking:
+        for target_id, carried_edges in carried:
+            move_edges(backend, target_id, fi.id, carried_edges)
+        # Sweeps the causal edges the plan itself aimed at a target,
         # planned while the target was still current; `supersede`
         # removed only the edges that existed before the plan ran, and
         # a target already superseded must stay edgeless too.
-        backend.edges.delete_by_node(plan.target_id)
+        for target_id, _relation in plan.targets:
+            backend.edges.delete_by_node(target_id)
 
     backend.nodes.stamp_linked(fi.id)
     if plan.enrichment:
@@ -828,8 +906,14 @@ def _apply_plan(
             semantic_facts=plan.enrichment.get('semantic_facts', []))
         backend.nodes.stamp_enriched(fi.id)
 
-    reported_action = ('add' if target_already_gone
-                       or corroborate_degraded else plan.action)
+    if corroborate_degraded or (linking and not linked_targets):
+        reported_action = 'add'
+    elif linking:
+        relations = {relation for _target, relation in linked_targets}
+        reported_action = ('supersede' if 'supersede' in relations
+                           else relations.pop())
+    else:
+        reported_action = plan.action
     result: dict[str, Any] = {
         'id': fi.id,
         'content': fi.content,
@@ -854,14 +938,15 @@ def _apply_plan(
         }
     if corroborate_degraded:
         # The degraded add supersedes nothing -- naming the dead
-        # target as `replaced_id` would claim a replace that never
+        # target as replaced would claim a replace that never
         # happened; `target_id` still names the row that vanished.
-        result['target_id'] = plan.target_id
-    elif target_already_gone:
-        # The row that now holds the topic is one read away; a silent
-        # add would hide it.
-        result['target_id'] = plan.target_id
-        result['target_superseded_by'] = target_superseded_by
-    elif plan.action in {'update', 'replace', 'supersede'} and plan.target_id:
-        result['replaced_id'] = plan.target_id
+        result['target_id'] = skip_target
+    elif linking:
+        # `replaced_ids` names what this write linked; `targets_gone`
+        # names the rows that now hold the topic, one read away, so a
+        # degraded add cannot hide them.
+        if linked_targets:
+            result['replaced_ids'] = [t for t, _relation in linked_targets]
+        if targets_gone:
+            result['targets_gone'] = targets_gone
     return result

@@ -658,8 +658,9 @@ def config_show(ctx: click.Context) -> None:
 @claude_callable
 @cli.command()
 @click.argument('content', nargs=-1, required=True)
-@click.option('--cat', default='general', help='Category')
-@click.option('--imp', default=3, type=int, help='Importance (1-5)')
+@click.option('--cat', default='fact', help='Category')
+@click.option('--imp', default=3, type=int,
+              help='Sort key for listings and tie-breaks (1-5, default 3)')
 @click.option('--source', default='user', help='Source')
 @click.option('--entities', default='', help='Comma-separated entities')
 @click.option('--no-reconcile', is_flag=True, default=False,
@@ -722,20 +723,20 @@ def remember(ctx: click.Context, content: tuple[str, ...], cat: str,
 
     from memman.queue import enqueue, queue_db
     with queue_db(data_dir_val) as conn:
-        # Explicitness decides whether `_plan_fact` keeps the caller's
-        # value or defers to the extractor's per-fact guess, so a
-        # caller who types the default must not read as one who typed
-        # nothing. `replace` resolves it the same way.
+        # Notes:
+        # - Explicitness decides whether `_plan_fact` keeps the caller's
+        #   category or defers to the extractor's per-fact guess, so a
+        #   caller who types the default must not read as one who typed
+        #   nothing.
+        # - Importance has no extractor value to defer to and is stored
+        #   as passed.
         from_cmdline = click.core.ParameterSource.COMMANDLINE
         cat_hint = (
             cat if ctx.get_parameter_source('cat') == from_cmdline
             else None)
-        imp_hint = (
-            imp if ctx.get_parameter_source('imp') == from_cmdline
-            else None)
         row_id, queue_uuid = enqueue(
             conn, store=name, content=content_str,
-            hint_cat=cat_hint, hint_imp=imp_hint,
+            hint_cat=cat_hint, hint_imp=imp,
             hint_source=source,
             hint_entities=entities_clean or None,
             hint_no_reconcile=no_reconcile,
@@ -1401,12 +1402,12 @@ def _process_queue_row(
     ctx.assert_fingerprint_unchanged()
 
     entity_list = _parse_entities(row.hint_entities or '')
-    category = row.hint_cat or 'general'
+    category = row.hint_cat or 'fact'
     importance = row.hint_imp if row.hint_imp is not None else 3
     source = row.hint_source or 'user'
 
     if category not in VALID_CATEGORIES:
-        category = 'general'
+        category = 'fact'
     if importance < 1 or importance > 5:
         importance = 3
 
@@ -1472,7 +1473,6 @@ def _process_queue_row(
         no_reconcile=row.hint_no_reconcile or bool(row.hint_replaced_id),
         replaced_id=replaced_id,
         cat_explicit=row.hint_cat is not None,
-        imp_explicit=row.hint_imp is not None,
         embed_cache=ctx.embed_cache,
         insights_by_id=ctx.insights_by_id,
         executor=executor,
@@ -1490,7 +1490,8 @@ def _process_queue_row(
 @click.argument('keyword', nargs=-1, required=True)
 @click.option('--cat', default='', help='Filter by category')
 @click.option('--limit', default=10, type=int, help='Max results')
-@click.option('--source', default='', help='Filter by source')
+@click.option('--source', default='',
+              help='Filter by source (exact match on the stored provenance string)')
 @click.option('--basic', is_flag=True, default=False, help='Simple SQL LIKE matching')
 @click.option('--brief', is_flag=True, default=False,
               help='Project each row to id, category, importance, '
@@ -1733,8 +1734,9 @@ def forget(ctx: click.Context, id: str) -> None:
 @cli.command()
 @click.argument('id')
 @click.argument('content', nargs=-1, required=True)
-@click.option('--cat', default='general', help='Category')
-@click.option('--imp', default=3, type=int, help='Importance (1-5)')
+@click.option('--cat', default='fact', help='Category')
+@click.option('--imp', default=3, type=int,
+              help='Sort key for listings and tie-breaks (1-5, default 3)')
 @click.option('--source', default='user', help='Source')
 @click.option('--entities', default='', help='Comma-separated entities')
 @click.option('--reconcile/--no-reconcile', 'reconcile', default=False,

@@ -40,10 +40,9 @@ def _spy_reconcile(monkeypatch):
     """
     calls = []
 
-    def _fake(llm_client, facts, similar):
-        calls.append((facts, similar))
-        return [{'fact': f['text'], 'action': 'ADD',
-                 'target_id': None, 'merged_text': None} for f in facts]
+    def _fake(llm_client, fact, similar):
+        calls.append((fact, similar))
+        return {'action': 'ADD', 'targets': [], 'merged_text': None}
 
     monkeypatch.setattr(
         'memman.llm.extract.reconcile_memories', _fake)

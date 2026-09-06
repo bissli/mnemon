@@ -26,7 +26,7 @@ Score = float
 
 VALID_CATEGORIES = {
     'preference', 'decision', 'fact',
-    'insight', 'context', 'general',
+    'insight', 'context',
     }
 
 VALID_EDGE_TYPES = {'temporal', 'semantic', 'causal', 'entity'}
@@ -38,7 +38,7 @@ class Insight:
 
     id: str = ''
     content: str = ''
-    category: str = 'general'
+    category: str = 'fact'
     importance: int = 3
     entities: list[str] = field(default_factory=list)
     source: str = 'user'

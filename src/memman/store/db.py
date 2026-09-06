@@ -348,7 +348,7 @@ _BASELINE_SCHEMA = """
 create table if not exists insights (
     id          text primary key,
     content     text not null,
-    category    text default 'general',
+    category    text default 'fact',
     importance  integer default 3,
     entities    text default '[]',
     source      text default 'user',
