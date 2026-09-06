@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "memman"
-version = "0.33.3"
+version = "0.34.0"
 description = "LLM-supervised persistent memory for AI agents - intent-aware graph recall, RAG, and pluggable embeddings for Claude Code, OpenClaw, and NanoClaw."
 authors = ["bissli"]
 license = "MIT"
