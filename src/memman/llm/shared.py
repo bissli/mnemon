@@ -7,6 +7,7 @@ shared between LLM and embed paths).
 
 import json
 import logging
+import re
 
 import httpx
 
@@ -74,8 +75,78 @@ def strip_code_fences(raw: str) -> str:
     return text
 
 
+# A valid escape pair is matched first, so a lone backslash is one that
+# no escape character follows (`NT AUTHORITY\SYSTEM`); only it doubles.
+_ESCAPE_RUN_RE = re.compile(r'\\\\|\\(?!["\\/bfnrtu])')
+
+
+def _top_level_json_values(raw: str, opener: str) -> list:
+    """Every JSON value that decodes from an `opener` in `raw`, in order.
+
+    Parameters
+    ----------
+    raw : str
+        The response text as the model returned it.
+    opener : str
+        `'{'` for objects, `'['` for lists.
+
+    Returns
+    -------
+    list
+        The decoded values. The scan resumes after each decoded value;
+        an opener whose value fails to decode (a truncated outer
+        object) is skipped by one character, so the values inside it
+        decode on their own. The text is scanned as sent and, when
+        nothing decodes, with lone backslashes repaired; a valid escape
+        pair is never touched.
+    """
+    decoder = json.JSONDecoder()
+    repaired = _ESCAPE_RUN_RE.sub(
+        lambda m: '\\\\' if m.group(0) == '\\' else m.group(0), raw)
+    for text in (raw, repaired) if repaired != raw else (raw,):
+        found: list = []
+        pos = 0
+        while True:
+            start = text.find(opener, pos)
+            if start == -1:
+                break
+            try:
+                value, end = decoder.raw_decode(text, start)
+            except ValueError:
+                pos = start + 1
+                continue
+            found.append(value)
+            pos = end
+        if found:
+            return found
+    return []
+
+
 def parse_json_response(raw: str) -> dict | None:
-    """Parse JSON dict from LLM response, handling code blocks."""
+    """The JSON object an LLM response carries, or None.
+
+    Parameters
+    ----------
+    raw : str
+        The response text as the model returned it.
+
+    Returns
+    -------
+    dict | None
+        The whole text decoded as an object when it is one (fences
+        stripped if present); else the LAST object the scan of
+        `_top_level_json_values` finds, so a response that reasons
+        before its JSON, or emits a block, says "let me reconsider" and
+        emits another, is read at its final answer; None when no object
+        decodes.
+
+    Notes
+    -----
+    - When an enclosing object fails to decode (a response cut at the
+      token ceiling), the objects inside it are what the scan finds;
+      none carries the top-level key a caller reads, so the caller's
+      failure path runs as before.
+    """
     for text in (raw, strip_code_fences(raw)):
         try:
             parsed = json.loads(text)
@@ -83,11 +154,27 @@ def parse_json_response(raw: str) -> dict | None:
                 return parsed
         except (json.JSONDecodeError, ValueError):
             pass
-    return None
+    objects = [v for v in _top_level_json_values(raw, '{') if isinstance(v, dict)]
+    return objects[-1] if objects else None
 
 
 def parse_json_list_response(raw: str) -> list | None:
-    """Parse JSON list from LLM response, handling code blocks."""
+    """The JSON list an LLM response carries, or None.
+
+    Parameters
+    ----------
+    raw : str
+        The response text as the model returned it.
+
+    Returns
+    -------
+    list | None
+        The whole text decoded as a list when it is one (fences stripped
+        if present); else the last list of objects the scan finds, so a
+        bracketed index the model wrote in its prose (`[0]`) never
+        replaces the answer; else the last list of any shape; None when
+        no list decodes.
+    """
     for text in (raw, strip_code_fences(raw)):
         try:
             parsed = json.loads(text)
@@ -95,7 +182,10 @@ def parse_json_list_response(raw: str) -> list | None:
                 return parsed
         except (json.JSONDecodeError, ValueError):
             pass
-    return None
+    lists = [v for v in _top_level_json_values(raw, '[') if isinstance(v, list)]
+    of_objects = [v for v in lists if all(isinstance(x, dict) for x in v)]
+    chosen = of_objects or lists
+    return chosen[-1] if chosen else None
 
 
 def safe_json(resp: httpx.Response) -> object:

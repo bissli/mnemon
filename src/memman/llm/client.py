@@ -57,7 +57,9 @@ EMPTY_RETRY_DELAY = 0.1
 # path and stays tight. The worker roles emit JSON that scales with
 # input size (canonical rewrite, enrichment entity/keyword lists);
 # a small cap truncates large insights mid-JSON and the parse fails,
-# so they get a larger token budget and a longer timeout.
+# so they get a larger token budget and a longer timeout. A caller
+# raises the budget for one call through `complete(max_tokens=)`; the
+# reconciler does, with `RECONCILE_MAX_TOKENS`.
 _ROLE_LIMITS = {
     ROLE_FAST: (FAST_MAX_TOKENS, ENRICHMENT_TIMEOUT),
     ROLE_SLOW_CANONICAL: (WORKER_MAX_TOKENS, WORKER_TIMEOUT),
@@ -104,7 +106,8 @@ class MemmanLLMClient:
 
     def complete(self, system: str, user: str, *,
                  temperature: float | None = None,
-                 stage: str) -> str:
+                 stage: str,
+                 max_tokens: int | None = None) -> str:
         """Send a chat-completion request and return the message content.
 
         Parameters
@@ -122,6 +125,9 @@ class MemmanLLMClient:
             every attempt's `usage` block is charged to it. Unknown
             stages raise `ValueError` so a typo cannot create a
             silent phantom bucket.
+        max_tokens : int | None, default None
+            Output budget for this call; None sends the role ceiling
+            the client was built with.
 
         Returns
         -------
@@ -155,7 +161,7 @@ class MemmanLLMClient:
         headers.update(self.extra_headers)
         body: dict = {
             'model': self.model,
-            'max_tokens': self.max_tokens,
+            'max_tokens': self.max_tokens if max_tokens is None else max_tokens,
             'messages': [
                 {'role': 'system', 'content': system},
                 {'role': 'user', 'content': user},
